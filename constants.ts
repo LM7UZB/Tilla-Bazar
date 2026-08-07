@@ -487,5 +487,10 @@ export const STRINGS: Record<Language, UIStrings> = {
 };
 
 export const ADMIN_TELEGRAM = "https://t.me/Rich_Emirates";
+
+// Admin panelga (brauzer orqali, Telegram tashqarisida) kirish uchun login/parol.
+// Bu qiymatlarni FAQAT o'zingiz bilasiz. Xohlasangiz o'zgartirib qo'yishingiz mumkin.
+export const ADMIN_LOGIN_USER = "lm7uzb_admin";
+export const ADMIN_LOGIN_PASS = "Hfg1HW96lMh4yY";
 export const IMG_API_KEY = "6d207e02198a847aa98d0a2a901485a5";
 export const UZUM_LINK = "https://uzum.uz/";

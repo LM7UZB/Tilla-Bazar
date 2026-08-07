@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UIStrings, UserAccount, Language } from '../types';
-import { STORE_ACCOUNTS, ADMIN_TELEGRAM } from '../constants';
+import { STORE_ACCOUNTS, ADMIN_TELEGRAM, ADMIN_LOGIN_USER, ADMIN_LOGIN_PASS } from '../constants';
 
 interface LoginModalProps {
   onClose: () => void;
@@ -101,8 +101,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onLogin, onAppl
   const textColor = isDark ? 'text-white' : 'text-gray-900';
 
   const handleLogin = () => {
-    // Special Simulation Credentials for Admin role
-    if (user === 'admin_147775103' && pass === '147775103') {
+    // Admin kirish (login/parol faqat sizga ma'lum, kod ichida ochiq ko'rsatilmaydi)
+    if (user === ADMIN_LOGIN_USER && pass === ADMIN_LOGIN_PASS) {
       onLogin({
         name: "Lazizbek (Simulyatsiya)",
         username: "@lazizbekmm72",
@@ -253,11 +253,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onLogin, onAppl
             </div>
             
             {error && <p className="text-red-500 text-[10px] font-black tracking-widest text-center uppercase">{t.wrongCreds}</p>}
-
-            {/* Simulation hint card for testers */}
-            <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl text-[10px] text-yellow-500 font-bold leading-relaxed text-left">
-              💡 <b>Sinov uchun (Test):</b> Kirish loginiga <span className="underline font-mono">admin_147775103</span> va parolga <span className="underline font-mono">147775103</span> yozib kirsangiz, sizda <b>id:147775103</b> akounti simulyatsiya qilinadi hamda adminlik va sotuvchilik huquqi ochiladi!
-            </div>
 
             {/* Login trigger button */}
             <div className="pt-2 space-y-4">
