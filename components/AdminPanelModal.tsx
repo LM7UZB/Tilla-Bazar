@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { UserAccount, Language, Product, Slide } from '../types';
 
 interface ApprovedProduct {
@@ -233,7 +233,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   slides,
   setSlides
 }) => {
-  const [activeTab, setActiveTab] = useState<'approve' | 'sales' | 'sellers' | 'products' | 'banners'>('sellers');
+  const [activeTab, setActiveTab] = useState<'approve' | 'sales' | 'sellers' | 'products' | 'banners' | 'rates'>('sellers');
   const [approveFilter, setApproveFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
   
   // Set date bounds to current day by default
@@ -261,6 +261,70 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const showToast = (msg: string) => {
     setPanelToast(msg);
     setTimeout(() => setPanelToast(null), 2500);
+  };
+
+  // --- Bank USD kurslari: faqat shu (Admin) panelda majburiy o'zgartirish mumkin ---
+  const [rSotish, setRSotish] = useState<{ bank: string; rate: string }[]>([
+    { bank: '', rate: '' }, { bank: '', rate: '' }, { bank: '', rate: '' }
+  ]);
+  const [rSotib, setRSotib] = useState<{ bank: string; rate: string }[]>([
+    { bank: '', rate: '' }, { bank: '', rate: '' }, { bank: '', rate: '' }
+  ]);
+  const [ratesSource, setRatesSource] = useState<string>('');
+  const [ratesLoading, setRatesLoading] = useState(false);
+
+  const loadRatesForAdmin = () => {
+    setRatesLoading(true);
+    fetch('/api/bank-rates')
+      .then(r => r.json())
+      .then(data => {
+        if (data?.ok) {
+          setRSotish((data.bestSell || []).map((x: any) => ({ bank: x.bank || '', rate: String(x.rate ?? '') })));
+          setRSotib((data.bestBuy || []).map((x: any) => ({ bank: x.bank || '', rate: String(x.rate ?? '') })));
+          setRatesSource(data.source || '');
+        }
+      })
+      .catch(() => {})
+      .finally(() => setRatesLoading(false));
+  };
+
+  useEffect(() => {
+    if (activeTab === 'rates') loadRatesForAdmin();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  const handleSaveRates = () => {
+    const clean = (arr: { bank: string; rate: string }[]) =>
+      arr.filter(x => x.bank.trim() && Number(x.rate) > 0)
+         .map(x => ({ bank: x.bank.trim(), rate: Number(x.rate) }));
+    const bestSell = clean(rSotish);
+    const bestBuy = clean(rSotib);
+    if (bestSell.length === 0 && bestBuy.length === 0) {
+      showToast("Kamida bitta bank kiritilishi kerak");
+      return;
+    }
+    fetch('/api/bank-rates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bestBuy, bestSell }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data?.ok) { showToast("Kurslar saqlandi ✅"); loadRatesForAdmin(); }
+        else { showToast(data?.error || "Xatolik yuz berdi"); }
+      })
+      .catch(() => showToast("Xatolik yuz berdi"));
+  };
+
+  const handleResetRatesToAuto = () => {
+    fetch('/api/bank-rates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'clear' }),
+    })
+      .then(r => r.json())
+      .then(() => { showToast("Avtomatik rejimga qaytarildi"); loadRatesForAdmin(); })
+      .catch(() => showToast("Xatolik yuz berdi"));
   };
 
   // State for editing and adding products
@@ -506,7 +570,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     );
   }, [productsList, productSearch]);
 
-  const tabClass = (tab: 'approve' | 'sales' | 'sellers' | 'products' | 'banners') => {
+  const tabClass = (tab: 'approve' | 'sales' | 'sellers' | 'products' | 'banners' | 'rates') => {
     const isActive = activeTab === tab;
     return `flex flex-col items-center justify-center py-2.5 px-0.5 rounded-xl border transition-all ${
       isActive 
@@ -566,8 +630,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
           </button>
         </div>
 
-        {/* 5 Main Tab Controls */}
-        <div className="grid grid-cols-5 gap-1.5 mb-5">
+        {/* 6 Main Tab Controls */}
+        <div className="grid grid-cols-6 gap-1.5 mb-5">
           <button onClick={() => { setActiveTab('approve'); setEditingProduct(null); setIsAddingProduct(null as any); setEditingSlide(null); setIsAddingSlide(false); }} className={tabClass('approve')}>
             <span className="text-sm">📦</span>
             <span className="text-[7px] tracking-widest font-sans font-black mt-1 uppercase">{t.tabApprove.slice(0,4)}..</span>
@@ -587,6 +651,10 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
           <button onClick={() => { setActiveTab('banners'); setEditingProduct(null); setIsAddingProduct(null as any); setEditingSlide(null); setIsAddingSlide(false); }} className={tabClass('banners')}>
             <span className="text-sm">🖼️</span>
             <span className="text-[7px] tracking-widest font-sans font-black mt-1 uppercase">{t.tabBanners.slice(0,4)}..</span>
+          </button>
+          <button onClick={() => { setActiveTab('rates'); setEditingProduct(null); setIsAddingProduct(null as any); setEditingSlide(null); setIsAddingSlide(false); }} className={tabClass('rates')}>
+            <span className="text-sm">💵</span>
+            <span className="text-[7px] tracking-widest font-sans font-black mt-1 uppercase">Kurs</span>
           </button>
         </div>
 
@@ -1115,6 +1183,88 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Contents for Tab 6: BANK KURSLARI (majburiy o'zgartirish) */}
+        {activeTab === 'rates' && (
+          <div className="space-y-4 animate-slide-up">
+            <div className={`${itemBg} border rounded-[24px] p-3.5 text-[9px] font-bold leading-relaxed ${textColor} opacity-70`}>
+              💵 Kurslar odatda <b>bank.uz</b>'dan avtomatik olinadi (har 30 daqiqada). Bu yerda kiritsangiz, sizning qiymatlaringiz <b>ustun</b> turadi (avtomatikani vaqtincha to'xtatadi). Saytdagi oddiy foydalanuvchilarga bu boshqaruv umuman ko'rinmaydi — faqat shu admin panelda.
+            </div>
+
+            {ratesSource === 'admin' && (
+              <div className="px-3 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-[9px] font-black text-yellow-500 text-center uppercase tracking-wide">
+                Hozir: QO'LDA kiritilgan kurslar faol
+              </div>
+            )}
+
+            <div>
+              <h4 className="text-[9px] font-black text-green-500 uppercase tracking-widest mb-2">{t.tabSales ? 'SOTISH (USD)' : 'SOTISH (USD)'}</h4>
+              <div className="space-y-1.5 w-full">
+                {rSotish.map((item, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <span className="text-[9px] font-bold text-gray-400 w-3">{i+1}.</span>
+                    <input
+                      type="text"
+                      value={item.bank}
+                      onChange={e => { const u = [...rSotish]; u[i] = { ...u[i], bank: e.target.value }; setRSotish(u); }}
+                      className={`flex-1 ${inputBg} rounded-lg px-2 py-1.5 text-[10px] font-bold border outline-none focus:border-[#d4af37]/50`}
+                      placeholder="Bank nomi"
+                    />
+                    <input
+                      type="text"
+                      value={item.rate}
+                      onChange={e => { const u = [...rSotish]; u[i] = { ...u[i], rate: e.target.value }; setRSotish(u); }}
+                      className={`w-20 ${inputBg} rounded-lg px-2 py-1.5 text-[10px] font-mono font-bold text-right border outline-none focus:border-[#d4af37]/50`}
+                      placeholder="12050"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-[9px] font-black text-red-500 uppercase tracking-widest mb-2">SOTIB OLISH (USD)</h4>
+              <div className="space-y-1.5 w-full">
+                {rSotib.map((item, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <span className="text-[9px] font-bold text-gray-400 w-3">{i+1}.</span>
+                    <input
+                      type="text"
+                      value={item.bank}
+                      onChange={e => { const u = [...rSotib]; u[i] = { ...u[i], bank: e.target.value }; setRSotib(u); }}
+                      className={`flex-1 ${inputBg} rounded-lg px-2 py-1.5 text-[10px] font-bold border outline-none focus:border-[#d4af37]/50`}
+                      placeholder="Bank nomi"
+                    />
+                    <input
+                      type="text"
+                      value={item.rate}
+                      onChange={e => { const u = [...rSotib]; u[i] = { ...u[i], rate: e.target.value }; setRSotib(u); }}
+                      className={`w-20 ${inputBg} rounded-lg px-2 py-1.5 text-[10px] font-mono font-bold text-right border outline-none focus:border-[#d4af37]/50`}
+                      placeholder="12010"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={handleResetRatesToAuto}
+                disabled={ratesLoading}
+                className="flex-1 py-2.5 border border-white/10 text-gray-400 text-[9px] font-black uppercase tracking-wider rounded-xl active:scale-95 transition-all"
+              >
+                Avtomatikaga qaytarish
+              </button>
+              <button
+                onClick={handleSaveRates}
+                disabled={ratesLoading}
+                className="flex-1 py-2.5 bg-[#d4af37] text-black text-[9px] font-black uppercase tracking-wider rounded-xl shadow active:scale-95 transition-all"
+              >
+                Saqlash
+              </button>
+            </div>
           </div>
         )}
 

@@ -21,7 +21,6 @@
 // Node 18+ da global fetch mavjud — qo'shimcha npm paket kerak emas.
 
 import { kvGetJSON, kvSetJSON, kvConfigured } from './_kv.js';
-import { validateInitData, isAdminUser } from './_auth.js';
 
 const OVERRIDE_KEY = 'bankrates:override:v1';
 
@@ -200,13 +199,12 @@ function sanitizeRates(list) {
 
 export default async function handler(req, res) {
   // --- Admin: qo'lda kurslarni saqlash / o'chirish ---
+  // Eslatma: bu app asosan mustaqil sayt sifatida ishlaydi (Telegram tashqarisida),
+  // shuning uchun bu yerda Telegram initData talab qilinmaydi — himoya faqat
+  // Admin Panelning o'zi login/parol bilan yopilganligiga tayanadi (frontend tomonda).
   if (req.method === 'POST') {
     if (!kvConfigured()) {
       return res.status(500).json({ ok: false, error: 'Baza ulanmagan (KV)' });
-    }
-    const user = validateInitData(req.headers['x-telegram-init-data'], process.env.BOT_TOKEN);
-    if (!isAdminUser(user)) {
-      return res.status(403).json({ ok: false, error: 'Faqat admin tahrirlay oladi' });
     }
     let body = req.body;
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
