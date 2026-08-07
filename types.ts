@@ -156,5 +156,6 @@ export interface UIStrings {
 export interface Slide {
   id: number;
   img: string;
-  target: { type: 'category' | 'store'; value: string };
+  videoUrl?: string; // ixtiyoriy: reklama video/rolik havolasi (YouTube, Telegram va h.k.)
+  target: { type: 'category' | 'store' | 'url'; value: string };
 }

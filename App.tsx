@@ -564,7 +564,12 @@ const App: React.FC = () => {
       <main className="animate-fade-in pb-32">
         {currentPage === 'home' && (
           <>
-            <AdSlider slides={slides} onBannerClick={(target) => target.type === 'store' ? handleStoreSelect(target.value) : setCurrentPage(target.value as Category)} />
+            <AdSlider slides={slides} onBannerClick={(slide) => {
+              if (slide.videoUrl) { window.open(slide.videoUrl, '_blank'); return; }
+              if (slide.target.type === 'url') { window.open(slide.target.value, '_blank'); return; }
+              if (slide.target.type === 'store') { handleStoreSelect(slide.target.value); return; }
+              setCurrentPage(slide.target.value as Category);
+            }} />
             
             <div className="px-6 mt-10 mb-2 flex flex-col gap-4">
               <div className="flex items-center justify-between">

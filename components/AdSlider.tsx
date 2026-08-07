@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Slide } from '../types';
 
 interface AdSliderProps {
   slides: Slide[];
-  onBannerClick: (target: { type: 'category' | 'store'; value: string }) => void;
+  onBannerClick: (slide: Slide) => void;
 }
 
 export const AdSlider: React.FC<AdSliderProps> = ({ slides, onBannerClick }) => {
@@ -24,7 +23,7 @@ export const AdSlider: React.FC<AdSliderProps> = ({ slides, onBannerClick }) => 
       {slides.map((slide, i) => (
         <div
           key={slide.id}
-          onClick={() => onBannerClick(slide.target)}
+          onClick={() => onBannerClick(slide)}
           className={`absolute inset-0 transition-all duration-1000 ease-in-out ${i === index ? 'opacity-100 scale-100' : 'opacity-0 scale-110 pointer-events-none'}`}
         >
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 z-10"></div>
@@ -33,6 +32,13 @@ export const AdSlider: React.FC<AdSliderProps> = ({ slides, onBannerClick }) => 
             alt="Promotion" 
             className="w-full h-full object-cover"
           />
+          {slide.videoUrl && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg">
+                <i className="fas fa-play text-white text-xl ml-1"></i>
+              </div>
+            </div>
+          )}
         </div>
       ))}
       

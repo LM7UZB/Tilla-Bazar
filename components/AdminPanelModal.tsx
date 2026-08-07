@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { UserAccount, Language, Product, Slide } from '../types';
+import { IMG_API_KEY } from '../constants';
 
 interface ApprovedProduct {
   id: string;
@@ -327,6 +328,42 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       .catch(() => showToast("Xatolik yuz berdi"));
   };
 
+  // --- Galereyadan to'g'ridan-to'g'ri rasm yuklash (URL yozish shart emas) ---
+  const [isUploadingPImg, setIsUploadingPImg] = useState(false);
+  const [isUploadingSImg, setIsUploadingSImg] = useState(false);
+
+  const uploadImageToHost = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method: 'POST', body: formData });
+      const data = await res.json();
+      return data?.success ? data.data.url : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const handlePImgGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingPImg(true);
+    const url = await uploadImageToHost(file);
+    if (url) { setPImg(url); showToast("Rasm yuklandi ✅"); }
+    else { showToast("Rasm yuklashda xatolik"); }
+    setIsUploadingPImg(false);
+  };
+
+  const handleSImgGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingSImg(true);
+    const url = await uploadImageToHost(file);
+    if (url) { setSImg(url); showToast("Rasm yuklandi ✅"); }
+    else { showToast("Rasm yuklashda xatolik"); }
+    setIsUploadingSImg(false);
+  };
+
   // State for editing and adding products
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
@@ -356,7 +393,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
   // Slide form fields
   const [sImg, setSImg] = useState('');
-  const [sTargetType, setSTargetType] = useState<'category' | 'store'>('store');
+  const [sVideoUrl, setSVideoUrl] = useState('');
+  const [sTargetType, setSTargetType] = useState<'category' | 'store' | 'url'>('store');
   const [sTargetValue, setSTargetValue] = useState('');
 
   // Trigger editing a product
@@ -471,6 +509,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     setIsAddingSlide(false);
 
     setSImg(slide.img);
+    setSVideoUrl(slide.videoUrl || '');
     setSTargetType(slide.target.type);
     setSTargetValue(slide.target.value);
   };
@@ -481,6 +520,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     setEditingSlide(null);
 
     setSImg('https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&q=80&w=1200');
+    setSVideoUrl('');
     setSTargetType('store');
     setSTargetValue('LM Gold');
   };
@@ -488,7 +528,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   // Save banner (Add or Edit)
   const handleSaveSlide = () => {
     if (!sImg || !sTargetValue) {
-      showToast("Rasm havolasi va qiymati to'ldirilishi shart!");
+      showToast("Rasm va qiymati to'ldirilishi shart!");
       return;
     }
 
@@ -497,6 +537,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       setSlides(prev => prev.map(s => s.id === editingSlide.id ? {
         ...s,
         img: sImg,
+        videoUrl: sVideoUrl || undefined,
         target: { type: sTargetType, value: sTargetValue }
       } : s));
       showToast(t.saveSuccess);
@@ -505,6 +546,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       const newSlide: Slide = {
         id: Math.floor(Math.random() * 1000000) + 3000,
         img: sImg,
+        videoUrl: sVideoUrl || undefined,
         target: { type: sTargetType, value: sTargetValue }
       };
       setSlides(prev => [...prev, newSlide]);
@@ -1008,7 +1050,17 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
                   <div>
                     <label className="text-[7.5px] font-black text-gray-400 block mb-1 uppercase">{t.productImg}</label>
-                    <input type="text" value={pImg} onChange={e => setPImg(e.target.value)} className={`w-full ${inputBg} rounded-lg px-2 py-1.5 text-[9px] font-semibold outline-none`} />
+                    <div className="flex gap-2 items-center">
+                      {pImg && <img src={pImg} alt="" className="w-11 h-11 rounded-lg object-cover border border-white/10 shrink-0" />}
+                      <label className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 ${inputBg} rounded-lg text-[9px] font-black uppercase tracking-wide cursor-pointer active:scale-95 transition-all`}>
+                        {isUploadingPImg ? (
+                          <><i className="fas fa-spinner fa-spin"></i><span>Yuklanmoqda...</span></>
+                        ) : (
+                          <><i className="fas fa-image"></i><span>{pImg ? 'Rasmni almashtirish' : 'Galereyadan tanlash'}</span></>
+                        )}
+                        <input type="file" hidden accept="image/*" onChange={handlePImgGalleryUpload} disabled={isUploadingPImg} />
+                      </label>
+                    </div>
                   </div>
                 </div>
 
@@ -1093,24 +1145,42 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-[7.5px] font-black text-gray-400 block mb-1 uppercase">{t.imageLink}</label>
+                    <label className="text-[7.5px] font-black text-gray-400 block mb-1 uppercase">Reklama rasmi</label>
+                    <div className="flex gap-2 items-center">
+                      {sImg && <img src={sImg} alt="" className="w-14 h-9 rounded-lg object-cover border border-white/10 shrink-0" />}
+                      <label className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 ${inputBg} rounded-xl text-[9px] font-black uppercase tracking-wide cursor-pointer active:scale-95 transition-all`}>
+                        {isUploadingSImg ? (
+                          <><i className="fas fa-spinner fa-spin"></i><span>Yuklanmoqda...</span></>
+                        ) : (
+                          <><i className="fas fa-image"></i><span>{sImg ? 'Rasmni almashtirish' : 'Galereyadan tanlash'}</span></>
+                        )}
+                        <input type="file" hidden accept="image/*" onChange={handleSImgGalleryUpload} disabled={isUploadingSImg} />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[7.5px] font-black text-gray-400 block mb-1 uppercase">Video / Rolik havolasi (ixtiyoriy)</label>
                     <input 
                       type="text" 
-                      value={sImg} 
-                      onChange={e => setSImg(e.target.value)} 
+                      value={sVideoUrl} 
+                      onChange={e => setSVideoUrl(e.target.value)} 
+                      placeholder="YouTube, Telegram yoki .mp4 havola"
                       className={`w-full ${inputBg} rounded-xl px-2.5 py-2 text-[9px] font-semibold outline-none`} 
                     />
+                    <p className="text-[7.5px] text-gray-400 font-bold mt-1 leading-relaxed">Kiritilsa, banner bosilganda shu video ochiladi (yangi tabda).</p>
                   </div>
 
                   <div>
                     <label className="text-[7.5px] font-black text-gray-400 block mb-1 uppercase">{t.targetType}</label>
                     <select 
                       value={sTargetType} 
-                      onChange={e => setSTargetType(e.target.value as 'store' | 'category')}
+                      onChange={e => setSTargetType(e.target.value as 'store' | 'category' | 'url')}
                       className={`w-full ${inputBg} rounded-xl px-2.5 py-2 text-[10px] font-black border border-transparent outline-none`}
                     >
                       <option value="store">STORE (Do'kon)</option>
                       <option value="category">CATEGORY (Toifa)</option>
+                      <option value="url">URL (Sayt / Joylashuv)</option>
                     </select>
                   </div>
 
@@ -1120,7 +1190,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                       type="text" 
                       value={sTargetValue} 
                       onChange={e => setSTargetValue(e.target.value)} 
-                      placeholder="Masalan: LM Gold yoki silver"
+                      placeholder={sTargetType === 'url' ? 'https://... yoki maps.google.com/...' : "Masalan: LM Gold yoki silver"}
                       className={`w-full ${inputBg} rounded-xl px-2.5 py-2 text-[9px] font-black outline-none`} 
                     />
                   </div>
