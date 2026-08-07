@@ -30,23 +30,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [tempAccount, setTempAccount] = useState<UserAccount>({ ...account });
 
-  // Best Bank rates matching screenshot 10
-  const [bankRates, setBankRates] = useState(() => {
-    const saved = localStorage.getItem('tilla_bazar_bank_rates');
-    return saved ? JSON.parse(saved) : {
-      sotish: [
-        { bank: 'Hayot bank', rate: '12 050' },
-        { bank: 'Asakabank', rate: '12 050' },
-        { bank: 'Openbank', rate: '12 055' }
-      ],
-      sotib: [
-        { bank: 'Universalbank', rate: '12 010' },
-        { bank: 'Infinbank', rate: '12 010' },
-        { bank: 'Turonbank', rate: '12 010' }
-      ]
-    };
+  // Eng yaxshi banklar (USD sotish/sotib olish) — endi bank.uz'dan avtomatik olinadi
+  const [bankRates, setBankRates] = useState<{ sotish: any[]; sotib: any[] }>({
+    sotish: [
+      { bank: 'Hayot bank', rate: '12 050' },
+      { bank: 'Asakabank', rate: '12 050' },
+      { bank: 'Openbank', rate: '12 055' }
+    ],
+    sotib: [
+      { bank: 'Universalbank', rate: '12 010' },
+      { bank: 'Infinbank', rate: '12 010' },
+      { bank: 'Turonbank', rate: '12 010' }
+    ]
   });
-  const [isEditingBanks, setIsEditingBanks] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadBankRates = async () => {
+      try {
+        const res = await fetch('/api/bank-rates');
+        const data = await res.json();
+        if (!cancelled && data?.ok && (data.bestSell?.length || data.bestBuy?.length)) {
+          const fmt = (n: number) => Math.round(n).toLocaleString('ru-RU').replace(/,/g, ' ');
+          setBankRates({
+            sotish: (data.bestSell || []).map((x: any) => ({ bank: x.bank, rate: fmt(x.rate) })),
+            sotib: (data.bestBuy || []).map((x: any) => ({ bank: x.bank, rate: fmt(x.rate) })),
+          });
+        }
+      } catch {
+        // Jonli ma'lumot olinmasa, joriy (standart) qiymatlar ko'rsatiladi — foydalanuvchiga xato ko'rsatilmaydi
+      }
+    };
+    loadBankRates();
+    const interval = setInterval(loadBankRates, 30 * 60 * 1000); // har 30 daqiqada yangilanadi
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
 
   // Accordion open/close states
   const [isOrdersOpen, setOrdersOpen] = useState(false);
@@ -445,105 +463,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">{strings.bestBanks}</span>
               </div>
-              
-              <div className="flex items-center gap-1.5">
-                <button 
-                  onClick={() => setIsEditingBanks(!isEditingBanks)}
-                  className="w-5 h-5 rounded-full bg-[#d4af37]/15 hover:bg-[#d4af37]/25 text-[#d4af37] flex items-center justify-center text-[9px] active:scale-90 transition-all"
-                  title={strings.edit}
-                >
-                  <i className="fas fa-edit"></i>
-                </button>
-              </div>
             </div>
 
-            {/* Editable inline fields if writing mode is on */}
-            {isEditingBanks ? (
-              <div className="space-y-4 text-left p-1 animate-slide-up">
-                <div>
-                  <h4 className="text-[9px] font-black text-green-500 uppercase tracking-widest mb-2">{strings.sell} (USD):</h4>
-                  <div className="space-y-1.5 w-full">
-                    {bankRates.sotish.map((item: any, i: number) => (
-                      <div key={i} className="flex gap-2 items-center">
-                        <span className="text-[9px] font-bold text-gray-400 w-3">{i+1}.</span>
-                        <input 
-                          type="text" 
-                          value={item.bank} 
-                          onChange={e => {
-                            const updated = { ...bankRates };
-                            updated.sotish[i].bank = e.target.value;
-                            setBankRates(updated);
-                            localStorage.setItem('tilla_bazar_bank_rates', JSON.stringify(updated));
-                          }}
-                          className={`flex-1 ${itemBg} rounded-lg px-2 py-1 text-[10px] font-bold border outline-none focus:border-[#d4af37]/50 ${textColor}`}
-                          placeholder="Bank"
-                        />
-                        <input 
-                          type="text" 
-                          value={item.rate} 
-                          onChange={e => {
-                            const updated = { ...bankRates };
-                            updated.sotish[i].rate = e.target.value;
-                            setBankRates(updated);
-                            localStorage.setItem('tilla_bazar_bank_rates', JSON.stringify(updated));
-                          }}
-                          className={`w-16 ${itemBg} rounded-lg px-2 py-1 text-[10px] font-mono font-bold text-right border outline-none focus:border-[#d4af37]/50 ${textColor}`}
-                          placeholder="Rate"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-[9px] font-black text-red-500 uppercase tracking-widest mb-2">{strings.buy} (USD):</h4>
-                  <div className="space-y-1.5 w-full">
-                    {bankRates.sotib.map((item: any, i: number) => (
-                      <div key={i} className="flex gap-2 items-center">
-                        <span className="text-[9px] font-bold text-gray-400 w-3">{i+1}.</span>
-                        <input 
-                          type="text" 
-                          value={item.bank} 
-                          onChange={e => {
-                            const updated = { ...bankRates };
-                            updated.sotib[i].bank = e.target.value;
-                            setBankRates(updated);
-                            localStorage.setItem('tilla_bazar_bank_rates', JSON.stringify(updated));
-                          }}
-                          className={`flex-1 ${itemBg} rounded-lg px-2 py-1 text-[10px] font-bold border outline-none focus:border-[#d4af37]/50 ${textColor}`}
-                          placeholder="Bank"
-                        />
-                        <input 
-                          type="text" 
-                          value={item.rate} 
-                          onChange={e => {
-                            const updated = { ...bankRates };
-                            updated.sotib[i].rate = e.target.value;
-                            setBankRates(updated);
-                            localStorage.setItem('tilla_bazar_bank_rates', JSON.stringify(updated));
-                          }}
-                          className={`w-16 ${itemBg} rounded-lg px-2 py-1 text-[10px] font-mono font-bold text-right border outline-none focus:border-[#d4af37]/50 ${textColor}`}
-                          placeholder="Rate"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <button 
-                  onClick={() => {
-                    setIsEditingBanks(false);
-                    if ((window as any).Telegram?.WebApp?.HapticFeedback) {
-                      (window as any).Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    }
-                  }}
-                  className="w-full py-2 bg-[#d4af37] text-black font-black text-[9px] uppercase tracking-widest rounded-xl shadow active:scale-95 transition-all mt-2"
-                >
-                  {strings.save}
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4 text-left pt-1">
+            <div className="grid grid-cols-2 gap-4 text-left pt-1">
                 {/* SOTISH Column */}
                 <div>
                   <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-2.5 flex items-center gap-1">
@@ -582,7 +504,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </div>
                 </div>
               </div>
-            )}
           </div>
         </div>
 
