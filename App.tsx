@@ -14,7 +14,7 @@ import { SellModal } from './components/SellModal';
 import { FilterDrawer } from './components/FilterDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
 import { LoginModal } from './components/LoginModal';
-import { RatesModal } from './components/RatesModal';
+import { RatesModal, DEFAULT_RATES, MetalRate } from './components/RatesModal';
 import { AdminPanelModal } from './components/AdminPanelModal';
 import { SellerPanelModal } from './components/SellerPanelModal';
 import { notifyAdmin, customerInfoText } from './utils/telegram';
@@ -45,6 +45,10 @@ const App: React.FC = () => {
   const [productsList, setProductsList] = useState<Product[]>(() => {
     const saved = localStorage.getItem('tilla_bazar_products_list');
     return saved ? JSON.parse(saved) : PRODUCTS;
+  });
+  const [metalRates, setMetalRates] = useState<MetalRate[]>(() => {
+    const saved = localStorage.getItem('tilla_bazar_metal_rates');
+    return saved ? JSON.parse(saved) : DEFAULT_RATES;
   });
 
   const [slides, setSlides] = useState<Slide[]>(() => {
@@ -211,6 +215,10 @@ const App: React.FC = () => {
     localStorage.setItem('tilla_bazar_sales_history', JSON.stringify(salesHistory));
   }, [salesHistory]);
 
+  useEffect(() => {
+    localStorage.setItem('tilla_bazar_metal_rates', JSON.stringify(metalRates));
+  }, [metalRates]);
+
   // --- Server bilan sinxronlash: sayt ochilganda umumiy (hammaga bir xil) ma'lumotni yuklab olamiz ---
   const hydratedFromServer = React.useRef(false);
   useEffect(() => {
@@ -222,6 +230,7 @@ const App: React.FC = () => {
         if (shared.sellerApplications) setSellerApplications(shared.sellerApplications);
         if (shared.salesHistory) setSalesHistory(shared.salesHistory);
         if (shared.slides) setSlides(shared.slides);
+        if (shared.metalRates) setMetalRates(shared.metalRates);
       }
       hydratedFromServer.current = true;
     });
@@ -230,8 +239,8 @@ const App: React.FC = () => {
   // Har qanday o'zgarish serverga (umumiy bazaga) ham yoziladi -> barcha mijoz/adminlarda bir xil ko'rinadi.
   useEffect(() => {
     if (!hydratedFromServer.current) return;
-    saveSharedState({ productsList, pendingProducts, sellersList, sellerApplications, salesHistory, slides });
-  }, [productsList, pendingProducts, sellersList, sellerApplications, salesHistory, slides]);
+    saveSharedState({ productsList, pendingProducts, sellersList, sellerApplications, salesHistory, slides, metalRates });
+  }, [productsList, pendingProducts, sellersList, sellerApplications, salesHistory, slides, metalRates]);
 
   const handleApproveProduct = (id: string) => {
     setPendingProducts(prev => prev.map(p => p.id === id ? { ...p, status: 'approved' } : p));
@@ -883,7 +892,7 @@ const App: React.FC = () => {
           account={account} 
         />
       )}
-      {isRatesOpen && <RatesModal onClose={() => setIsRatesOpen(false)} theme={theme} lang={lang} />}
+      {isRatesOpen && <RatesModal onClose={() => setIsRatesOpen(false)} theme={theme} lang={lang} rates={metalRates} />}
       {isAdminPanelOpen && (
         <AdminPanelModal 
           onClose={() => setIsAdminPanelOpen(false)} 
@@ -902,6 +911,8 @@ const App: React.FC = () => {
           setProductsList={setProductsList}
           slides={slides}
           setSlides={setSlides}
+          metalRates={metalRates}
+          setMetalRates={setMetalRates}
         />
       )}
       {isSellerPanelOpen && account.isOwner && !account.isAdmin && (

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { UserAccount, Language, Product, Slide } from '../types';
 import { IMG_API_KEY } from '../constants';
+import { MetalRate } from './RatesModal';
 
 interface ApprovedProduct {
   id: string;
@@ -55,6 +56,8 @@ interface AdminPanelModalProps {
   setProductsList: React.Dispatch<React.SetStateAction<Product[]>>;
   slides: Slide[];
   setSlides: React.Dispatch<React.SetStateAction<Slide[]>>;
+  metalRates: MetalRate[];
+  setMetalRates: React.Dispatch<React.SetStateAction<MetalRate[]>>;
 }
 
 const translations = {
@@ -232,7 +235,9 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   productsList,
   setProductsList,
   slides,
-  setSlides
+  setSlides,
+  metalRates,
+  setMetalRates
 }) => {
   const [activeTab, setActiveTab] = useState<'approve' | 'sales' | 'sellers' | 'products' | 'banners' | 'rates'>('sellers');
   const [approveFilter, setApproveFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
@@ -1334,6 +1339,55 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
               >
                 Saqlash
               </button>
+            </div>
+
+            {/* --- Tilla va Kumush narxlari (1 gramm uchun) --- */}
+            <div className="pt-5 mt-5 border-t border-white/10 space-y-3">
+              <div className={`${itemBg} border rounded-[24px] p-3.5 text-[9px] font-bold leading-relaxed ${textColor} opacity-70`}>
+                💰 Bu yerda kiritilgan narxlar saytdagi "Tilla va Kumush narxlari" oynasida (tepadagi menyu) barcha foydalanuvchilarga ko'rinadi. Faqat shu admin panelda o'zgartirish mumkin — do'kon egalari (sotuvchilar) bunga tega olmaydi.
+              </div>
+
+              <div className="grid grid-cols-4 text-[8px] font-black uppercase tracking-wider text-gray-400 pb-1 px-1">
+                <span className="col-span-2">Metal / Proba</span>
+                <span className="text-center">Sotish</span>
+                <span className="text-center">Sotib olish</span>
+              </div>
+
+              <div className="space-y-1.5">
+                {metalRates.map((r, i) => (
+                  <div key={r.id} className={`grid grid-cols-4 items-center gap-1.5 ${itemBg} border rounded-xl px-2.5 py-2`}>
+                    <div className="col-span-2 flex items-center gap-1.5 min-w-0">
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${r.metal === 'gold' ? 'bg-[#d4af37]' : 'bg-gray-400'}`}></span>
+                      <span className={`text-[9px] font-bold ${textColor} truncate`}>{r.proba}</span>
+                    </div>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={r.sellPrice}
+                      onChange={e => {
+                        const val = parseFloat(e.target.value) || 0;
+                        const updated = [...metalRates];
+                        updated[i] = { ...updated[i], sellPrice: val };
+                        setMetalRates(updated);
+                      }}
+                      className={`w-full ${inputBg} rounded-lg px-1.5 py-1 text-[9px] font-mono font-bold text-center outline-none`}
+                    />
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={r.buyPrice}
+                      onChange={e => {
+                        const val = parseFloat(e.target.value) || 0;
+                        const updated = [...metalRates];
+                        updated[i] = { ...updated[i], buyPrice: val };
+                        setMetalRates(updated);
+                      }}
+                      className={`w-full ${inputBg} rounded-lg px-1.5 py-1 text-[9px] font-mono font-bold text-center outline-none`}
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-[8px] text-gray-500 font-bold text-center pt-1">Narxlar kiritilgan zahoti avtomatik saqlanadi</p>
             </div>
           </div>
         )}

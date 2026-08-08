@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { REGIONS, IMG_API_KEY } from '../constants';
 
-interface MetalRate {
+export interface MetalRate {
   id: string;
   metal: 'gold' | 'silver';
   proba: string;
@@ -13,9 +13,10 @@ interface RatesModalProps {
   onClose: () => void;
   theme: 'dark' | 'light';
   lang: 'uz' | 'ru' | 'en';
+  rates: MetalRate[];
 }
 
-const DEFAULT_RATES: MetalRate[] = [
+export const DEFAULT_RATES: MetalRate[] = [
   { id: 'g585', metal: 'gold', proba: '583 / 585', sellPrice: 90, buyPrice: 77 },
   { id: 'g750', metal: 'gold', proba: '750 (18K)', sellPrice: 124, buyPrice: 100 },
   { id: 'g916', metal: 'gold', proba: '916 (22K)', sellPrice: 130, buyPrice: 115 },
@@ -24,13 +25,7 @@ const DEFAULT_RATES: MetalRate[] = [
   { id: 's999', metal: 'silver', proba: '999 (Chorva)', sellPrice: 7, buyPrice: 1.2 },
 ];
 
-export const RatesModal: React.FC<RatesModalProps> = ({ onClose, theme, lang }) => {
-  const [rates, setRates] = useState<MetalRate[]>(() => {
-    const saved = localStorage.getItem('tilla_bazar_metal_rates');
-    return saved ? JSON.parse(saved) : DEFAULT_RATES;
-  });
-  
-  const [isEditing, setIsEditing] = useState(false);
+export const RatesModal: React.FC<RatesModalProps> = ({ onClose, theme, lang, rates }) => {
   const [calcWeight, setCalcWeight] = useState<string>('');
   const [calcSelected, setCalcSelected] = useState<string>(rates[0]?.id || 'g585');
 
@@ -106,15 +101,6 @@ export const RatesModal: React.FC<RatesModalProps> = ({ onClose, theme, lang }) 
         img: ''
       });
     }, 4500);
-  };
-
-  useEffect(() => {
-    localStorage.setItem('tilla_bazar_metal_rates', JSON.stringify(rates));
-  }, [rates]);
-
-  const handlePriceChange = (id: string, field: 'sellPrice' | 'buyPrice', val: string) => {
-    const parsed = parseFloat(val) || 0;
-    setRates(prev => prev.map(r => r.id === id ? { ...r, [field]: parsed } : r));
   };
 
   const getSelectedRate = rates.find(r => r.id === calcSelected);
@@ -539,44 +525,14 @@ export const RatesModal: React.FC<RatesModalProps> = ({ onClose, theme, lang }) 
 
                 {/* Selling price */}
                 <div className="flex justify-center px-1">
-                  {isEditing ? (
-                    <div className="relative flex items-center">
-                      <span className="absolute left-2 text-xs text-[#d4af37] font-semibold">$</span>
-                      <input 
-                        type="number" 
-                        step="0.01"
-                        value={rate.sellPrice} 
-                        onChange={(e) => handlePriceChange(rate.id, 'sellPrice', e.target.value)}
-                        className={`w-20 pl-5 pr-2 py-1 text-center font-mono text-xs rounded-lg border focus:outline-none focus:border-[#d4af37] ${
-                          theme === 'dark' ? 'bg-black/40 border-white/10 text-white' : 'bg-white border-gray-300 text-black'
-                        }`}
-                      />
-                    </div>
-                  ) : (
-                    <span className="text-sm font-black font-mono text-[#d4af37]">${rate.sellPrice} / g</span>
-                  )}
+                  <span className="text-sm font-black font-mono text-[#d4af37]">${rate.sellPrice} / g</span>
                 </div>
 
                 {/* Buying price */}
                 <div className="flex justify-center px-1">
-                  {isEditing ? (
-                    <div className="relative flex items-center">
-                      <span className="absolute left-2 text-xs text-green-500 font-semibold">$</span>
-                      <input 
-                        type="number" 
-                        step="0.01"
-                        value={rate.buyPrice} 
-                        onChange={(e) => handlePriceChange(rate.id, 'buyPrice', e.target.value)}
-                        className={`w-20 pl-5 pr-2 py-1 text-center font-mono text-xs rounded-lg border focus:outline-none focus:border-green-500 ${
-                          theme === 'dark' ? 'bg-black/40 border-white/10 text-white' : 'bg-white border-gray-300 text-black'
-                        }`}
-                      />
-                    </div>
-                  ) : (
-                    <span className={`text-sm font-bold font-mono ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                      ${rate.buyPrice} / g
-                    </span>
-                  )}
+                  <span className={`text-sm font-bold font-mono ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                    ${rate.buyPrice} / g
+                  </span>
                 </div>
               </div>
             ))}
@@ -669,50 +625,6 @@ export const RatesModal: React.FC<RatesModalProps> = ({ onClose, theme, lang }) 
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2 relative z-10">
-          {isEditing ? (
-            <>
-              <button 
-                onClick={() => {
-                  setIsEditing(false);
-                  if ((window as any).Telegram?.WebApp?.HapticFeedback) {
-                    (window as any).Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                  }
-                }}
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-[#d4af37] to-[#e7ca70] text-black rounded-xl font-black text-xs uppercase tracking-wider active:scale-95 transition-all duration-300 shadow-md shadow-[#d4af37]/20"
-              >
-                <i className="fas fa-check mr-1.5"></i>
-                {t.save}
-              </button>
-              <button 
-                onClick={() => {
-                  setRates(DEFAULT_RATES);
-                  setIsEditing(false);
-                }}
-                className={`py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider active:scale-95 transition-all duration-300 ${
-                  theme === 'dark' ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
-                }`}
-                title={t.reset}
-              >
-                <i className="fas fa-undo"></i>
-              </button>
-            </>
-          ) : (
-            <button 
-              onClick={() => {
-                setIsEditing(true);
-                if ((window as any).Telegram?.WebApp?.HapticFeedback) {
-                  (window as any).Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-                }
-              }}
-              className={`w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider active:scale-95 transition-all duration-300 flex items-center justify-center gap-1.5 border border-[#d4af37]/40 text-[#d4af37] hover:bg-[#d4af37]/10`}
-            >
-              <i className="fas fa-edit"></i>
-              {t.edit}
-            </button>
-          )}
-        </div>
       </div>
     </div>
   );

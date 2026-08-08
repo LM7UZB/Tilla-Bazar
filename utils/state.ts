@@ -9,6 +9,7 @@ export interface SharedState {
   sellerApplications?: any[];
   salesHistory?: any[];
   slides?: any[];
+  metalRates?: any[];
   updatedAt?: string;
 }
 
