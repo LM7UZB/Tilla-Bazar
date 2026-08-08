@@ -1,0 +1,32 @@
+# Render.com uchun Blueprint.
+# Render'da "New +" -> "Blueprint" -> shu repo'ni tanlang.
+# Keyin quyidagi Environment Variables'larni to'ldiring:
+#   BOT_TOKEN              - BotFather'dan olingan token (Telegram xabarnomalari + bot uchun)
+#   ADMIN_CHAT_ID          - arizalar/buyurtmalar yuboriladigan chat ID (@userinfobot beradi)
+#   WEBAPP_URL             - shu Render xizmatining o'zi manzili (masalan https://tillabazar.onrender.com
+#                             yoki ulangan maxsus domeningiz, masalan https://tillabazar.uz)
+#   KV_REST_API_URL        - Upstash Redis REST URL (umumiy ma'lumotlar bazasi uchun, ixtiyoriy lekin tavsiya etiladi)
+#   KV_REST_API_TOKEN      - Upstash Redis REST Token
+#
+# Eslatma: KV_REST_API_URL/TOKEN Vercel'dagi bilan bir xil bo'lishi mumkin (ikkalasi ham Upstash Redis'dan
+# foydalanadi) — shunday qilib ma'lumotlar Vercel'dan Render'ga o'tishda yo'qolmaydi.
+
+services:
+  - type: web
+    name: tillabazar
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: ADMIN_CHAT_ID
+        sync: false
+      - key: WEBAPP_URL
+        sync: false
+      - key: KV_REST_API_URL
+        sync: false
+      - key: KV_REST_API_TOKEN
+        sync: false
