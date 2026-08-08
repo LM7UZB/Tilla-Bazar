@@ -112,7 +112,7 @@ export const SellModal: React.FC<SellModalProps> = ({ onClose, strings, theme, a
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[150] flex items-center justify-center p-4 animate-fade-in">
-      <div className={`w-full max-w-md ${bgColor} border border-[#d4af37]/30 rounded-[40px] p-6 shadow-2xl overflow-y-auto max-h-[92vh] transition-colors relative`}>
+      <div className={`w-full max-w-md sm:max-w-xl lg:max-w-2xl ${bgColor} border border-[#d4af37]/30 rounded-[40px] p-6 md:p-8 shadow-2xl overflow-y-auto max-h-[92vh] transition-colors relative`}>
         {isSent ? (
           <div className="text-center py-12 space-y-4 animate-slide-up">
             <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
@@ -186,7 +186,7 @@ export const SellModal: React.FC<SellModalProps> = ({ onClose, strings, theme, a
               {/* Image Upload - Styled exactly like Screenshot 1 & 2 */}
               <div className="text-left">
                 <label className={labelColor}>{lang === 'uz' ? `ASOSIY RASM (${form.img ? 1 : 0}/5)` : `ОСНОВНОЕ ФОТО (${form.img ? 1 : 0}/5)`}</label>
-                <label className={`block w-28 h-28 border-2 border-dashed ${form.img ? 'border-green-500/50 bg-green-500/5' : 'border-[#d4af37]/35 hover:bg-[#d4af37]/5'} rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative group`}>
+                <label className={`block w-28 h-28 sm:w-40 sm:h-40 border-2 border-dashed ${form.img ? 'border-green-500/50 bg-green-500/5' : 'border-[#d4af37]/35 hover:bg-[#d4af37]/5'} rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden relative group`}>
                   {isUploading ? (
                      <i className="fas fa-circle-notch fa-spin text-xl text-[#d4af37]"></i>
                   ) : form.img ? (

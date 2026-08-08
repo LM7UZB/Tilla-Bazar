@@ -563,7 +563,7 @@ const App: React.FC = () => {
       
       <Header onMenuClick={() => setSidebarOpen(true)} onRatesClick={() => setIsRatesOpen(true)} theme={theme} lang={lang} />
       
-      <main className="animate-fade-in pb-32">
+      <main className="animate-fade-in pb-32 max-w-7xl mx-auto">
         {currentPage === 'home' && (
           <>
             <AdSlider slides={slides} onBannerClick={(slide) => {

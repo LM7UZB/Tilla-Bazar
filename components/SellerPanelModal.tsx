@@ -108,7 +108,7 @@ export const SellerPanelModal: React.FC<SellerPanelModalProps> = ({
     <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[180] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
       <div className="absolute inset-0 z-0" onClick={onClose} />
 
-      <div className={`w-full max-w-md ${bgColor} border-t sm:border border-[#d4af37]/30 rounded-t-[40px] sm:rounded-[40px] p-5 shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto scrollbar-none relative z-10`}>
+      <div className={`w-full max-w-md sm:max-w-xl lg:max-w-2xl ${bgColor} border-t sm:border border-[#d4af37]/30 rounded-t-[40px] sm:rounded-[40px] p-5 md:p-7 shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto scrollbar-none relative z-10`}>
 
         {toast && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[190] bg-[#d4af37] text-black text-[10px] px-4 py-1.5 rounded-full font-black shadow-xl">

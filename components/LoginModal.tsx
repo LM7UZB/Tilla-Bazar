@@ -183,7 +183,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onClose, onLogin, onAppl
       {/* Outside click handler */}
       <div className="absolute inset-0 z-0" onClick={onClose} />
       
-      <div className={`w-full sm:max-w-md ${bgColor} rounded-t-[36px] sm:rounded-[36px] p-6 sm:p-8 shadow-2xl relative z-10 animate-slide-up border-t border-white/10 max-h-[95vh] overflow-y-auto scrollbar-none`}>
+      <div className={`w-full sm:max-w-lg ${bgColor} rounded-t-[36px] sm:rounded-[36px] p-6 sm:p-8 shadow-2xl relative z-10 animate-slide-up border-t border-white/10 max-h-[95vh] overflow-y-auto scrollbar-none`}>
         {/* Drag handle line on top for simulated bottom drawer look on mobile */}
         <div className="w-12 h-1 bg-gray-300 dark:bg-gray-700/50 rounded-full mx-auto mb-6 sm:hidden pointer-events-none" />
 

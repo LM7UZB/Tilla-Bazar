@@ -640,7 +640,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       {/* Outside click handler */}
       <div className="absolute inset-0 z-0" onClick={onClose} />
 
-      <div className={`w-full max-w-md ${bgColor} border-t sm:border border-[#d4af37]/30 rounded-t-[40px] sm:rounded-[40px] p-5 shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto scrollbar-none transition-all duration-300 relative z-10`}>
+      <div className={`w-full max-w-md sm:max-w-2xl lg:max-w-4xl ${bgColor} border-t sm:border border-[#d4af37]/30 rounded-t-[40px] sm:rounded-[40px] p-5 md:p-8 shadow-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto scrollbar-none transition-all duration-300 relative z-10`}>
         
         {/* Toast Notification */}
         {panelToast && (

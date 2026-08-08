@@ -17,7 +17,7 @@ export const AdSlider: React.FC<AdSliderProps> = ({ slides, onBannerClick }) => 
   }, []);
 
   return (
-    <div className="relative h-80 m-4 rounded-[40px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.4)] group cursor-pointer transition-all active:scale-95">
+    <div className="relative h-80 md:h-96 lg:h-[440px] m-4 rounded-[40px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.4)] group cursor-pointer transition-all active:scale-95">
       <div className="absolute inset-0 z-0 bg-white/5 backdrop-blur-sm"></div>
 
       {slides.map((slide, i) => (

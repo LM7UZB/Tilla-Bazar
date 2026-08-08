@@ -338,7 +338,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       )}
 
       {/* Main Drawer container */}
-      <div className={`w-full sm:max-w-md ${bgColor} rounded-t-[40px] sm:rounded-[40px] border-t sm:border border-[#d4af37]/30 shadow-2xl p-6 sm:p-8 space-y-6 relative max-sm:pb-12 animate-slide-up`}>
+      <div className={`w-full sm:max-w-lg ${bgColor} rounded-t-[40px] sm:rounded-[40px] border-t sm:border border-[#d4af37]/30 shadow-2xl p-6 sm:p-8 space-y-6 relative max-sm:pb-12 animate-slide-up`}>
         
         {/* Step: Selection Mode */}
         {step === 'select' && (

@@ -33,12 +33,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     : (theme === 'light' ? 'far fa-heart text-gray-800' : 'far fa-heart text-white');
 
   return (
-    <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-[60] flex items-end justify-center animate-fade-in" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={`w-full max-h-[96vh] ${modalBg} rounded-t-[45px] border-t-2 border-[#d4af37] overflow-y-auto p-7 shadow-2xl animate-slide-up transition-colors`}>
+    <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-[60] flex items-end sm:items-center justify-center animate-fade-in" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className={`w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl max-h-[96vh] sm:max-h-[92vh] ${modalBg} rounded-t-[45px] sm:rounded-[45px] border-t-2 sm:border-2 border-[#d4af37] overflow-y-auto p-7 md:p-10 shadow-2xl animate-slide-up transition-colors`}>
         <div className="w-14 h-1.5 bg-gray-500/30 rounded-full mx-auto mb-8"></div>
         
         <div className="relative mb-8">
-          <img src={product.img} alt={product.title[lang]} className="w-full h-[400px] object-cover rounded-[35px] shadow-2xl border border-white/5" />
+          <img src={product.img} alt={product.title[lang]} className="w-full h-[400px] md:h-[480px] object-cover rounded-[35px] shadow-2xl border border-white/5" />
           
           <button 
             onClick={(e) => { e.stopPropagation(); onWishlistToggle(product.id); }}
