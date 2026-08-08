@@ -16,6 +16,7 @@ import { CheckoutModal } from './components/CheckoutModal';
 import { LoginModal } from './components/LoginModal';
 import { RatesModal } from './components/RatesModal';
 import { AdminPanelModal } from './components/AdminPanelModal';
+import { SellerPanelModal } from './components/SellerPanelModal';
 import { notifyAdmin, customerInfoText } from './utils/telegram';
 import { fetchSharedState, saveSharedState } from './utils/state';
 
@@ -34,6 +35,7 @@ const App: React.FC = () => {
   const [isCheckoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [isRatesOpen, setIsRatesOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [isSellerPanelOpen, setIsSellerPanelOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [cartAnimations, setCartAnimations] = useState<{ id: string; x: number; y: number; img: string }[]>([]);
@@ -772,6 +774,7 @@ const App: React.FC = () => {
         onAddToCart={addToCart}
         onProductClick={setSelectedProduct}
         onAdminPanelClick={() => setIsAdminPanelOpen(true)}
+        onSellerPanelClick={() => setIsSellerPanelOpen(true)}
       />
       
       {selectedProduct && <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} onAddToCart={addToCart} onWishlistToggle={toggleWishlist} onStoreClick={handleStoreSelect} isWishlisted={wishlist.includes(selectedProduct.id)} strings={s} theme={theme} lang={lang} />}
@@ -899,6 +902,18 @@ const App: React.FC = () => {
           setProductsList={setProductsList}
           slides={slides}
           setSlides={setSlides}
+        />
+      )}
+      {isSellerPanelOpen && account.isOwner && !account.isAdmin && (
+        <SellerPanelModal
+          onClose={() => setIsSellerPanelOpen(false)}
+          theme={theme}
+          lang={lang}
+          account={account}
+          productsList={productsList}
+          setProductsList={setProductsList}
+          salesHistory={salesHistory}
+          onAddProductClick={() => { setIsSellerPanelOpen(false); setSellModalOpen(true); }}
         />
       )}
     </div>

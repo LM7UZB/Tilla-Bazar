@@ -20,11 +20,12 @@ interface SidebarProps {
   onAddToCart: (p: Product, e?: any) => void;
   onProductClick: (p: Product) => void;
   onAdminPanelClick: () => void;
+  onSellerPanelClick: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
   isOpen, onClose, account, setAccount, theme, setTheme, lang, setLang, onSellClick, onLoginClick, strings,
-  wishlist, onWishlistToggle, cart, onAddToCart, onProductClick, onAdminPanelClick
+  wishlist, onWishlistToggle, cart, onAddToCart, onProductClick, onAdminPanelClick, onSellerPanelClick
 }) => {
   const [isEditOpen, setEditOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -225,6 +226,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex flex-col">
                   <div className="font-black text-xs uppercase tracking-tight font-sans">{strings.adminPanel}</div>
                   <div className="text-[7.5px] font-black text-black/50 uppercase tracking-widest mt-0.5">{strings.reviewsStats}</div>
+                </div>
+              </div>
+              <i className="fas fa-chevron-right text-xs mr-1 opacity-60"></i>
+            </button>
+          </div>
+        )}
+
+        {/* Seller Panel Quick Access (faqat sotuvchilar uchun, admin emas) */}
+        {account.isOwner && !account.isAdmin && (
+          <div className="px-5 mb-4 animate-fade-in">
+            <button 
+              onClick={() => {
+                onSellerPanelClick();
+                onClose();
+              }}
+              className="w-full flex items-center justify-between p-4 bg-[#d4af37] hover:bg-[#c29e2f] text-black rounded-[28px] group active:scale-95 transition-all shadow-lg shadow-[#d4af37]/15 border border-white/10"
+            >
+              <div className="flex items-center gap-3.5 text-left">
+                <div className="w-10 h-10 bg-black/10 rounded-xl flex items-center justify-center text-black">
+                  <i className="fas fa-store text-lg"></i>
+                </div>
+                <div className="flex flex-col">
+                  <div className="font-black text-xs uppercase tracking-tight font-sans">MENING DO'KONIM</div>
+                  <div className="text-[7.5px] font-black text-black/50 uppercase tracking-widest mt-0.5">MAHSULOT & SOTUVLAR</div>
                 </div>
               </div>
               <i className="fas fa-chevron-right text-xs mr-1 opacity-60"></i>
