@@ -42,17 +42,36 @@ export const SellerPanelModal: React.FC<SellerPanelModalProps> = ({
   const [eTitle, setETitle] = useState('');
   const [ePrice, setEPrice] = useState('');
   const [eGram, setEGram] = useState('');
+  const [eProba, setEProba] = useState('585');
   const [eDesc, setEDesc] = useState('');
   const [eImg, setEImg] = useState('');
+  const [eCat, setECat] = useState<'gold' | 'silver'>('gold');
   const [isUploadingImg, setIsUploadingImg] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const probas = eCat === 'gold' ? ['583', '585', '750', '875', '916', '999'] : ['925'];
+  const getKarat = (proba: string) => {
+    switch (proba) {
+      case '583': case '585': return '14K';
+      case '750': return '18K';
+      case '875': return '21K';
+      case '916': return '22K';
+      case '999': return '24K';
+      case '925': return 'Kumush';
+      default: return '';
+    }
+  };
 
   const startEdit = (p: Product) => {
     setEditingId(p.id);
     setETitle(p.title.uz);
     setEPrice(String(p.price));
     setEGram(p.gram);
+    setEProba(p.proba || '585');
+    setECat(p.cat === 'silver' ? 'silver' : 'gold');
     setEDesc(p.desc.uz);
     setEImg(p.img);
+    setShowPreview(false);
   };
 
   const cancelEdit = () => setEditingId(null);
@@ -84,6 +103,9 @@ export const SellerPanelModal: React.FC<SellerPanelModalProps> = ({
       title: { ...p.title, uz: eTitle.trim() },
       price: Number(ePrice),
       gram: eGram,
+      proba: eProba,
+      karat: getKarat(eProba),
+      cat: eCat,
       desc: { ...p.desc, uz: eDesc },
       img: eImg || p.img,
     } : p));
@@ -93,6 +115,7 @@ export const SellerPanelModal: React.FC<SellerPanelModalProps> = ({
     );
     showToast('Saqlandi');
     setEditingId(null);
+    setShowPreview(false);
   };
 
   const handleDelete = (p: Product) => {
@@ -186,11 +209,54 @@ export const SellerPanelModal: React.FC<SellerPanelModalProps> = ({
                       <input type="number" value={ePrice} onChange={e => setEPrice(e.target.value)} placeholder="Narxi ($)" className={`flex-1 ${inputBg} rounded-lg px-2.5 py-2 text-[10px] font-bold outline-none`} />
                       <input type="text" value={eGram} onChange={e => setEGram(e.target.value)} placeholder="Og'irligi" className={`flex-1 ${inputBg} rounded-lg px-2.5 py-2 text-[10px] font-bold outline-none`} />
                     </div>
+                    <div className="flex gap-2">
+                      <select value={eCat} onChange={e => { const c = e.target.value as 'gold' | 'silver'; setECat(c); setEProba(c === 'gold' ? '585' : '925'); }} className={`flex-1 ${inputBg} rounded-lg px-2.5 py-2 text-[10px] font-bold outline-none appearance-none`}>
+                        <option value="gold">Tilla</option>
+                        <option value="silver">Kumush</option>
+                      </select>
+                      <select value={eProba} onChange={e => setEProba(e.target.value)} className={`flex-1 ${inputBg} rounded-lg px-2.5 py-2 text-[10px] font-bold outline-none appearance-none`}>
+                        {probas.map(pr => <option key={pr} value={pr}>{pr} проба ({getKarat(pr)})</option>)}
+                      </select>
+                    </div>
                     <textarea value={eDesc} onChange={e => setEDesc(e.target.value)} placeholder="Tavsif" rows={2} className={`w-full ${inputBg} rounded-lg px-2.5 py-2 text-[10px] font-bold outline-none resize-none`} />
                     <div className="flex gap-2 pt-1">
                       <button onClick={cancelEdit} className="flex-1 py-2 border border-white/10 text-gray-400 text-[9px] font-black uppercase rounded-xl active:scale-95 transition-all">Bekor qilish</button>
+                      <button onClick={() => setShowPreview(true)} className="flex-1 py-2 border-2 border-[#d4af37]/50 text-[#d4af37] text-[9px] font-black uppercase rounded-xl active:scale-95 transition-all flex items-center justify-center gap-1"><i className="fas fa-eye text-[8px]"></i>Ko'rish</button>
                       <button onClick={saveEdit} className="flex-1 py-2 bg-[#d4af37] text-black text-[9px] font-black uppercase rounded-xl active:scale-95 transition-all">Saqlash</button>
                     </div>
+
+                    {showPreview && (
+                      <div className="fixed inset-0 z-[195] bg-black/95 backdrop-blur-xl flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in" onClick={(e) => e.target === e.currentTarget && setShowPreview(false)}>
+                        <div className={`w-full sm:max-w-lg max-h-[92vh] ${bgColor} rounded-t-[40px] sm:rounded-[40px] border-t-2 sm:border-2 border-[#d4af37] overflow-y-auto p-6 shadow-2xl animate-slide-up`}>
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-[9px] font-black text-[#d4af37] uppercase tracking-widest">MIJOZLARGA SHUNDAY KO'RINADI</span>
+                            <button onClick={() => setShowPreview(false)} className="w-8 h-8 flex items-center justify-center bg-white/5 rounded-full text-gray-400 active:scale-75 transition-transform">
+                              <i className="fas fa-times"></i>
+                            </button>
+                          </div>
+                          {eImg ? (
+                            <img src={eImg} alt="" className="w-full h-[260px] object-cover rounded-[28px] shadow-2xl border border-white/5 mb-5" />
+                          ) : (
+                            <div className="w-full h-[200px] rounded-[28px] border-2 border-dashed border-[#d4af37]/30 flex items-center justify-center text-gray-500 text-[10px] font-black uppercase mb-5">Rasm yo'q</div>
+                          )}
+                          <div className="space-y-3 text-left">
+                            <div className="flex items-center justify-between gap-2">
+                              <h3 className={`text-lg font-black ${textColor} leading-tight`}>{eTitle || 'Mahsulot nomi...'}</h3>
+                              <span className="text-lg font-black text-[#d4af37] shrink-0">${ePrice || '0'}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <span className={`px-3 py-1.5 ${inputBg} rounded-full text-[9px] font-black uppercase tracking-wide ${textColor}`}>{eGram || '0'} gr</span>
+                              <span className={`px-3 py-1.5 ${inputBg} rounded-full text-[9px] font-black uppercase tracking-wide ${textColor}`}>{eProba} проба ({getKarat(eProba)})</span>
+                            </div>
+                            {eDesc && <p className="text-sm text-gray-400 font-medium leading-relaxed pt-2 border-t border-white/5 mt-3">{eDesc}</p>}
+                          </div>
+                          <div className="flex gap-3 pt-6">
+                            <button onClick={() => setShowPreview(false)} className="flex-1 py-3.5 bg-white/5 text-gray-400 font-black rounded-2xl text-[10px] uppercase tracking-widest active:scale-95 transition-all">Yopish</button>
+                            <button onClick={saveEdit} className="flex-[2] py-3.5 bg-[#d4af37] text-black font-black rounded-2xl shadow-lg active:scale-95 transition-all text-[10px] uppercase tracking-widest">Saqlash</button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">

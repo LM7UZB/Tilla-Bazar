@@ -28,6 +28,7 @@ export const SellModal: React.FC<SellModalProps> = ({ onClose, strings, theme, a
   
   const [isUploading, setIsUploading] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const bgColor = theme === 'light' ? 'bg-white' : 'bg-[#141414]';
   const inputBg = theme === 'light' ? 'bg-gray-100 border-gray-200' : 'bg-white/5 border-white/10';
@@ -257,6 +258,12 @@ export const SellModal: React.FC<SellModalProps> = ({ onClose, strings, theme, a
                 <button onClick={onClose} className={`flex-1 py-4 ${theme === 'light' ? 'bg-gray-200 text-black' : 'bg-white/5 text-gray-400'} font-black rounded-2xl text-[10px] uppercase tracking-widest active:scale-95 transition-all`}>
                   {lang === 'uz' ? "BEKOR QILISH" : lang === 'ru' ? "ОТМЕНА" : "CANCEL"}
                 </button>
+                <button
+                  onClick={() => setShowPreview(true)}
+                  className={`flex-1 py-4 border-2 border-[#d4af37]/50 text-[#d4af37] font-black rounded-2xl text-[10px] uppercase tracking-widest active:scale-95 transition-all flex items-center justify-center gap-1.5`}
+                >
+                  <i className="fas fa-eye"></i> {lang === 'uz' ? "KO'RISH" : lang === 'ru' ? "ПРЕДПРОСМОТР" : "PREVIEW"}
+                </button>
                 <button 
                   onClick={handleSubmit} 
                   className="flex-[2] py-4 bg-[#d4af37] text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(212,175,55,0.3)] active:scale-95 transition-all text-xs uppercase tracking-widest"
@@ -266,6 +273,61 @@ export const SellModal: React.FC<SellModalProps> = ({ onClose, strings, theme, a
               </div>
             </div>
           </>
+        )}
+
+        {/* Mahsulot qanday ko'rinishini oldindan ko'rish */}
+        {showPreview && (
+          <div className="fixed inset-0 z-[160] bg-black/95 backdrop-blur-xl flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in" onClick={(e) => e.target === e.currentTarget && setShowPreview(false)}>
+            <div className={`w-full sm:max-w-xl md:max-w-2xl max-h-[92vh] ${bgColor} rounded-t-[40px] sm:rounded-[40px] border-t-2 sm:border-2 border-[#d4af37] overflow-y-auto p-6 md:p-8 shadow-2xl animate-slide-up`}>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[9px] font-black text-[#d4af37] uppercase tracking-widest">
+                  {lang === 'uz' ? "MIJOZLARGA SHUNDAY KO'RINADI" : "ПРЕДПРОСМОТР ТОВАРА"}
+                </span>
+                <button onClick={() => setShowPreview(false)} className="w-8 h-8 flex items-center justify-center bg-white/5 rounded-full text-gray-400 active:scale-75 transition-transform">
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+
+              {form.img ? (
+                <img src={form.img} alt="" className="w-full h-[280px] md:h-[380px] object-cover rounded-[30px] shadow-2xl border border-white/5 mb-6" />
+              ) : (
+                <div className={`w-full h-[220px] rounded-[30px] border-2 border-dashed border-[#d4af37]/30 flex items-center justify-center text-gray-500 text-[10px] font-black uppercase mb-6`}>
+                  {lang === 'uz' ? "Rasm tanlanmagan" : "Изображение не выбрано"}
+                </div>
+              )}
+
+              <div className="space-y-3 text-left">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className={`text-xl font-black ${textColor} leading-tight`}>{form.title || (lang === 'uz' ? "Mahsulot nomi..." : "Название товара...")}</h3>
+                  <span className="text-xl font-black text-[#d4af37] shrink-0">${form.price || '0'}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className={`px-3 py-1.5 ${inputBg} rounded-full text-[9px] font-black uppercase tracking-wide ${textColor}`}>{form.type}</span>
+                  <span className={`px-3 py-1.5 ${inputBg} rounded-full text-[9px] font-black uppercase tracking-wide ${textColor}`}>{form.gram || '0'} gr</span>
+                  <span className={`px-3 py-1.5 ${inputBg} rounded-full text-[9px] font-black uppercase tracking-wide ${textColor}`}>{form.proba} проба ({getKarat(form.proba)})</span>
+                  <span className={`px-3 py-1.5 ${inputBg} rounded-full text-[9px] font-black uppercase tracking-wide ${textColor}`}><i className="fas fa-map-marker-alt mr-1"></i>{form.location}</span>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <div className="w-7 h-7 rounded-full bg-[#d4af37]/15 text-[#d4af37] flex items-center justify-center text-[10px]">
+                    <i className="fas fa-store"></i>
+                  </div>
+                  <span className={`text-[10px] font-black ${textColor} uppercase tracking-wide`}>{form.storeName || account.storeName}</span>
+                </div>
+                {form.desc && (
+                  <p className="text-sm text-gray-400 font-medium leading-relaxed pt-2 border-t border-white/5 mt-3">{form.desc}</p>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-6">
+                <button onClick={() => setShowPreview(false)} className={`flex-1 py-4 ${theme === 'light' ? 'bg-gray-200 text-black' : 'bg-white/5 text-gray-400'} font-black rounded-2xl text-[10px] uppercase tracking-widest active:scale-95 transition-all`}>
+                  {lang === 'uz' ? "TAHRIRLASHNI DAVOM ETTIRISH" : "ПРОДОЛЖИТЬ РЕДАКТИРОВАНИЕ"}
+                </button>
+                <button onClick={() => { setShowPreview(false); handleSubmit(); }} className="flex-[2] py-4 bg-[#d4af37] text-black font-black rounded-2xl shadow-[0_10px_30px_rgba(212,175,55,0.3)] active:scale-95 transition-all text-xs uppercase tracking-widest">
+                  {lang === 'uz' ? "TASDIQLAB JOYLASHTIRISH" : "ПОДТВЕРДИТЬ И РАЗМЕСТИТЬ"}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
