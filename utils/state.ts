@@ -2,6 +2,8 @@
 // KV ulangan bo'lsa -> hamma foydalanuvchida bir xil ma'lumot (haqiqiy umumiy do'kon).
 // KV ulanmagan bo'lsa -> localStorage'ga tushib qoladi (eski xatti-harakat, faqat shu brauzerda).
 
+import { API_BASE } from '../constants';
+
 export interface SharedState {
   productsList?: any[];
   pendingProducts?: any[];
@@ -18,7 +20,7 @@ let kvAvailable: boolean | null = null;
 /** Serverdan joriy umumiy holatni oladi. KV ulanmagan/xato bo'lsa null qaytaradi. */
 export async function fetchSharedState(): Promise<SharedState | null> {
   try {
-    const res = await fetch('/api/state');
+    const res = await fetch(`${API_BASE}/api/state`);
     const data = await res.json();
     kvAvailable = !!data?.configured;
     return data?.ok && data.state ? data.state : null;
@@ -32,7 +34,7 @@ export async function fetchSharedState(): Promise<SharedState | null> {
 export async function saveSharedState(patch: SharedState): Promise<boolean> {
   if (kvAvailable === false) return false; // KV yo'q ekanligi allaqachon ma'lum -> behuda so'rov yubormaymiz
   try {
-    const res = await fetch('/api/state', {
+    const res = await fetch(`${API_BASE}/api/state`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ state: patch }),

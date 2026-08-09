@@ -19,6 +19,16 @@ const WEBAPP_URL = (process.env.WEBAPP_URL || '').trim().replace(/\/+$/, '');
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 
+// CORS: frontend endi boshqa domenda (Vercel/domeningiz) bo'lishi mumkin,
+// shuning uchun bu yerdan (Render) so'rov qabul qilishga ruxsat beramiz.
+app.use((req, res, next) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, X-Telegram-Init-Data');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
 app.get('/health', (_req, res) => res.json({ ok: true, status: 'running' }));
 
 // ----------------------------------------------------------------------------

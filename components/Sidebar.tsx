@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserAccount, Language, UIStrings, Product, CartItem } from '../types';
-import { ADMIN_TELEGRAM, IMG_API_KEY, PRODUCTS } from '../constants';
+import { ADMIN_TELEGRAM, IMG_API_KEY, PRODUCTS, API_BASE } from '../constants';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -49,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     let cancelled = false;
     const loadBankRates = async () => {
       try {
-        const res = await fetch('/api/bank-rates');
+        const res = await fetch(`${API_BASE}/api/bank-rates`);
         const data = await res.json();
         if (!cancelled && data?.ok && (data.bestSell?.length || data.bestBuy?.length)) {
           const fmt = (n: number) => Math.round(n).toLocaleString('ru-RU').replace(/,/g, ' ');

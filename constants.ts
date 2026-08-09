@@ -488,6 +488,13 @@ export const STRINGS: Record<Language, UIStrings> = {
 
 export const ADMIN_TELEGRAM = "https://t.me/Rich_Emirates";
 
+// Backend (API) manzili. Front Vercel'da, backend esa Render'da bo'lganda
+// so'rovlar shu yerga (Render serveriga) yuboriladi. Agar frontend Render'ning
+// o'zida ishlayotgan bo'lsa (bitta joyda), bo'sh qatorni ('') ishlatib,
+// nisbiy (relative) manzillar bilan ishlaydi.
+// VITE_API_BASE_URL orqali build vaqtida o'zgartirish mumkin (Vercel Environment Variables'da).
+export const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL ?? 'https://tillabazar.onrender.com';
+
 // Admin panelga (brauzer orqali, Telegram tashqarisida) kirish uchun login/parol.
 // Bu qiymatlarni FAQAT o'zingiz bilasiz. Xohlasangiz o'zgartirib qo'yishingiz mumkin.
 export const ADMIN_LOGIN_USER = "lm7uzb_admin";

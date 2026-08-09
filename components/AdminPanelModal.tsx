@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { UserAccount, Language, Product, Slide } from '../types';
-import { IMG_API_KEY } from '../constants';
+import { IMG_API_KEY, API_BASE } from '../constants';
 import { MetalRate } from './RatesModal';
 
 interface ApprovedProduct {
@@ -281,7 +281,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
   const loadRatesForAdmin = () => {
     setRatesLoading(true);
-    fetch('/api/bank-rates')
+    fetch(`${API_BASE}/api/bank-rates`)
       .then(r => r.json())
       .then(data => {
         if (data?.ok) {
@@ -309,7 +309,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       showToast("Kamida bitta bank kiritilishi kerak");
       return;
     }
-    fetch('/api/bank-rates', {
+    fetch(`${API_BASE}/api/bank-rates`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ bestBuy, bestSell }),
@@ -323,7 +323,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   };
 
   const handleResetRatesToAuto = () => {
-    fetch('/api/bank-rates', {
+    fetch(`${API_BASE}/api/bank-rates`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'clear' }),

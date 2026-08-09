@@ -1,5 +1,7 @@
 // Telegram Mini App yordamchi funksiyalari (admin, mijoz, adminga yuborish).
 
+import { API_BASE } from '../constants';
+
 // Admin Telegram ID lari. 147775103 = @LM7_UZB (asosiy admin).
 // Yangi admin qo'shish uchun shu ro'yxatga ID qo'shing.
 export const ADMIN_IDS: number[] = [147775103];
@@ -38,7 +40,7 @@ export function customerInfoText(): string {
  */
 export async function notifyAdmin(text: string): Promise<boolean> {
   try {
-    const res = await fetch('/api/notify', {
+    const res = await fetch(`${API_BASE}/api/notify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
