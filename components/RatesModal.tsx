@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { REGIONS, IMG_API_KEY } from '../constants';
+import { REGIONS, CLOUDINARY_UPLOAD_URL, CLOUDINARY_UPLOAD_PRESET } from '../constants';
 
 export interface MetalRate {
   id: string;
@@ -47,24 +47,25 @@ export const RatesModal: React.FC<RatesModalProps> = ({ onClose, theme, lang, ra
     if (!file) return;
     setIsUserUploading(true);
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
     try {
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, {
+      const res = await fetch(`${CLOUDINARY_UPLOAD_URL}`, {
         method: "POST",
         body: formData
       });
       const data = await res.json();
-      if (data.success) {
-        setUserSellForm(prev => ({ ...prev, img: data.data.url }));
+      if (data?.secure_url) {
+        setUserSellForm(prev => ({ ...prev, img: data.secure_url }));
         if ((window as any).Telegram?.WebApp?.HapticFeedback) {
           (window as any).Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         }
       } else {
-        console.error('imgbb upload error:', data);
+        console.error('Cloudinary yuklash xatosi:', data);
         alert((lang === 'uz' ? "Rasm yuklanmadi: " : "Изображение не загружено: ") + (data?.error?.message || 'noma\'lum xato'));
       }
     } catch (err) {
-      console.error('imgbb upload exception:', err);
+      console.error('Cloudinary yuklash istisnosi:', err);
       alert(lang === 'uz' ? "Rasm yuklashda xatolik yuz berdi (internet aloqasini tekshiring)" : "Ошибка загрузки изображения");
     } finally {
       setIsUserUploading(false);

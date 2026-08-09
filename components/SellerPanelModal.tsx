@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { UserAccount, Language, Product } from '../types';
-import { IMG_API_KEY } from '../constants';
+import { CLOUDINARY_UPLOAD_URL, CLOUDINARY_UPLOAD_PRESET } from '../constants';
 import { notifyAdmin, customerInfoText } from '../utils/telegram';
 
 interface SellerPanelModalProps {
@@ -81,11 +81,12 @@ export const SellerPanelModal: React.FC<SellerPanelModalProps> = ({
     if (!file) return;
     setIsUploadingImg(true);
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     try {
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method: 'POST', body: formData });
+      const res = await fetch(`${CLOUDINARY_UPLOAD_URL}`, { method: 'POST', body: formData });
       const data = await res.json();
-      if (data?.success) { setEImg(data.data.url); showToast('Rasm yuklandi'); }
+      if (data?.success) { setEImg(data.secure_url); showToast('Rasm yuklandi'); }
       else { showToast('Rasm yuklashda xatolik'); }
     } catch {
       showToast('Rasm yuklashda xatolik');

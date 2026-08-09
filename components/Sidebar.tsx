@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserAccount, Language, UIStrings, Product, CartItem } from '../types';
-import { ADMIN_TELEGRAM, IMG_API_KEY, PRODUCTS, API_BASE } from '../constants';
+import { ADMIN_TELEGRAM, CLOUDINARY_UPLOAD_URL, CLOUDINARY_UPLOAD_PRESET, PRODUCTS, API_BASE } from '../constants';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -110,24 +110,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (!file) return;
     setIsUploading(true);
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
     try {
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, {
+      const res = await fetch(`${CLOUDINARY_UPLOAD_URL}`, {
         method: "POST",
         body: formData
       });
       const data = await res.json();
-      if (data.success) {
-        setTempAccount({ ...tempAccount, avatar: data.data.url });
+      if (data?.secure_url) {
+        setTempAccount({ ...tempAccount, avatar: data.secure_url });
         if ((window as any).Telegram?.WebApp?.HapticFeedback) {
           (window as any).Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         }
       } else {
-        console.error('imgbb upload error:', data);
+        console.error('Cloudinary yuklash xatosi:', data);
         alert("Rasm yuklanmadi: " + (data?.error?.message || 'noma\'lum xato'));
       }
     } catch (err) {
-      console.error('imgbb upload exception:', err);
+      console.error('Cloudinary yuklash istisnosi:', err);
       alert("Rasm yuklashda xatolik (internet aloqasini tekshiring)");
     } finally {
       setIsUploading(false);

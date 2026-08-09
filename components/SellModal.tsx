@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { UIStrings, Language, UserAccount } from '../types';
-import { IMG_API_KEY, REGIONS } from '../constants';
+import { CLOUDINARY_UPLOAD_URL, CLOUDINARY_UPLOAD_PRESET, REGIONS } from '../constants';
 
 interface SellModalProps {
   onClose: () => void;
@@ -56,24 +56,25 @@ export const SellModal: React.FC<SellModalProps> = ({ onClose, strings, theme, a
     if (!file) return;
     setIsUploading(true);
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
     try {
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, {
+      const res = await fetch(`${CLOUDINARY_UPLOAD_URL}`, {
         method: "POST",
         body: formData
       });
       const data = await res.json();
-      if (data.success) {
-        setForm(prev => ({ ...prev, img: data.data.url }));
+      if (data?.secure_url) {
+        setForm(prev => ({ ...prev, img: data.secure_url }));
         if ((window as any).Telegram?.WebApp?.HapticFeedback) {
           (window as any).Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         }
       } else {
-        console.error('imgbb upload error:', data);
+        console.error('Cloudinary yuklash xatosi:', data);
         alert((lang === 'uz' ? "Rasm yuklanmadi: " : lang === 'ru' ? "Изображение не загружено: " : "Upload failed: ") + (data?.error?.message || 'noma\'lum xato'));
       }
     } catch (err) {
-      console.error('imgbb upload exception:', err);
+      console.error('Cloudinary yuklash istisnosi:', err);
       alert(lang === 'uz' ? "Rasm yuklashda xatolik yuz berdi (internet aloqasini tekshiring)" : lang === 'ru' ? "Ошибка при загрузке изображения" : "Error uploading image");
     } finally {
       setIsUploading(false);

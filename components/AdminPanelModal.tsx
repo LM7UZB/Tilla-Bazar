@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { UserAccount, Language, Product, Slide } from '../types';
-import { IMG_API_KEY, API_BASE } from '../constants';
+import { CLOUDINARY_UPLOAD_URL, CLOUDINARY_UPLOAD_PRESET, API_BASE } from '../constants';
 import { MetalRate } from './RatesModal';
 
 interface ApprovedProduct {
@@ -339,14 +339,15 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
   const uploadImageToHost = async (file: File): Promise<string | null> => {
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     try {
-      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method: 'POST', body: formData });
+      const res = await fetch(`${CLOUDINARY_UPLOAD_URL}`, { method: 'POST', body: formData });
       const data = await res.json();
-      if (!data?.success) console.error('imgbb upload error:', data);
-      return data?.success ? data.data.url : null;
+      if (!data?.secure_url) console.error('Cloudinary upload error:', data);
+      return data?.secure_url || null;
     } catch (e) {
-      console.error('imgbb upload exception:', e);
+      console.error('Cloudinary yuklash istisnosi:', e);
       return null;
     }
   };

@@ -499,5 +499,8 @@ export const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL ?? 'https://
 // Bu qiymatlarni FAQAT o'zingiz bilasiz. Xohlasangiz o'zgartirib qo'yishingiz mumkin.
 export const ADMIN_LOGIN_USER = "lm7uzb_admin";
 export const ADMIN_LOGIN_PASS = "LazizUzB777$";
-export const IMG_API_KEY = "6d207e02198a847aa98d0a2a901485a5";
+// Cloudinary (rasm/video saqlash — bepul, doimiy, hech qachon o'chmaydi)
+export const CLOUDINARY_CLOUD_NAME = "lgqz2lyr";
+export const CLOUDINARY_UPLOAD_PRESET = "TillaBazar";
+export const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 export const UZUM_LINK = "https://uzum.uz/";
