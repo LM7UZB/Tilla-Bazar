@@ -68,9 +68,13 @@ export const SellModal: React.FC<SellModalProps> = ({ onClose, strings, theme, a
         if ((window as any).Telegram?.WebApp?.HapticFeedback) {
           (window as any).Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         }
+      } else {
+        console.error('imgbb upload error:', data);
+        alert((lang === 'uz' ? "Rasm yuklanmadi: " : lang === 'ru' ? "Изображение не загружено: " : "Upload failed: ") + (data?.error?.message || 'noma\'lum xato'));
       }
     } catch (err) {
-      alert(lang === 'uz' ? "Rasm yuklashda xatolik yuz berdi" : lang === 'ru' ? "Ошибка при загрузке изображения" : "Error uploading image");
+      console.error('imgbb upload exception:', err);
+      alert(lang === 'uz' ? "Rasm yuklashda xatolik yuz berdi (internet aloqasini tekshiring)" : lang === 'ru' ? "Ошибка при загрузке изображения" : "Error uploading image");
     } finally {
       setIsUploading(false);
     }

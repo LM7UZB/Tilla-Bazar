@@ -122,9 +122,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         if ((window as any).Telegram?.WebApp?.HapticFeedback) {
           (window as any).Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         }
+      } else {
+        console.error('imgbb upload error:', data);
+        alert("Rasm yuklanmadi: " + (data?.error?.message || 'noma\'lum xato'));
       }
     } catch (err) {
-      alert("Error uploading avatar");
+      console.error('imgbb upload exception:', err);
+      alert("Rasm yuklashda xatolik (internet aloqasini tekshiring)");
     } finally {
       setIsUploading(false);
     }

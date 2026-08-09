@@ -343,8 +343,10 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     try {
       const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMG_API_KEY}`, { method: 'POST', body: formData });
       const data = await res.json();
+      if (!data?.success) console.error('imgbb upload error:', data);
       return data?.success ? data.data.url : null;
-    } catch {
+    } catch (e) {
+      console.error('imgbb upload exception:', e);
       return null;
     }
   };
