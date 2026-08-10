@@ -161,6 +161,35 @@ async function tryFetch(url) {
   }
 }
 
+// Ba'zi saytlar (Next.js, Nuxt va h.k.) jadvalni ko'zga ko'rinadigan HTML sifatida emas,
+// balki sahifa ichiga "yashirilgan" JSON holida joylaydi (JavaScript keyin uni chizadi).
+// Shu JSON bo'laklarini qidirib topamiz va odatdagidek tekshiramiz.
+function extractEmbeddedJsonBlobs(html) {
+  const blobs = [];
+
+  // 1) Next.js: <script id="__NEXT_DATA__" type="application/json">{...}</script>
+  const nextMatch = html.match(/<script[^>]*id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i);
+  if (nextMatch) {
+    try { blobs.push(JSON.parse(nextMatch[1])); } catch { /* JSON emas */ }
+  }
+
+  // 2) Har qanday application/json turidagi <script> bloklari
+  const jsonScripts = html.match(/<script[^>]+type=["']application\/(?:json|ld\+json)["'][^>]*>[\s\S]*?<\/script>/gi) || [];
+  for (const block of jsonScripts) {
+    const inner = block.replace(/^<script[^>]*>/i, '').replace(/<\/script>$/i, '').trim();
+    try { blobs.push(JSON.parse(inner)); } catch { /* JSON emas */ }
+  }
+
+  // 3) Nuxt: window.__NUXT__= yoki self.__NUXT__= bilan boshlanadigan bloklar ichidan
+  //    JSON'ga o'xshagan {...} qismini ajratib olishga urinamiz.
+  const nuxtMatch = html.match(/__NUXT__\s*=\s*(\{[\s\S]*?\})\s*;?\s*<\/script>/i);
+  if (nuxtMatch) {
+    try { blobs.push(JSON.parse(nuxtMatch[1])); } catch { /* murakkab JS ifoda, o'tkazib yuboramiz */ }
+  }
+
+  return blobs;
+}
+
 function parseAny(text, ctype) {
   let parsed = { buy: [], sell: [] };
   const looksJson = ctype.includes('json') || /^\s*[[{]/.test(text);
@@ -168,6 +197,12 @@ function parseAny(text, ctype) {
     try { parsed = parseJson(JSON.parse(text)); } catch { /* JSON emas */ }
   }
   if (parsed.buy.length === 0 && parsed.sell.length === 0) parsed = parseHtml(text);
+  if (parsed.buy.length === 0 && parsed.sell.length === 0) {
+    for (const blob of extractEmbeddedJsonBlobs(text)) {
+      const fromBlob = parseJson(blob);
+      if (fromBlob.buy.length || fromBlob.sell.length) { parsed = fromBlob; break; }
+    }
+  }
   return parsed;
 }
 
@@ -253,7 +288,8 @@ export default async function handler(req, res) {
         if (!ok) { attempts.push({ url, status }); continue; }
         const parsed = parseAny(text, ctype);
         const found = parsed.buy.length + parsed.sell.length;
-        attempts.push({ url, status, found });
+        const embeddedBlobCount = extractEmbeddedJsonBlobs(text).length;
+        attempts.push({ url, status, found, embeddedBlobCount, textLen: text.length });
 
         if (debug && found > 0) {
           return res.status(200).json({
@@ -262,6 +298,15 @@ export default async function handler(req, res) {
             buyCount: parsed.buy.length, sellCount: parsed.sell.length,
             sampleBuy: parsed.buy.slice(0, 6), sampleSell: parsed.sell.slice(0, 6),
             rawSnippet: text.slice(0, 2000),
+          });
+        }
+        if (debug && found === 0 && url === TARGET_URLS[0]) {
+          // Birinchi (asosiy) manzil hech narsa bermasa - tekshirish uchun xom HTML namunasini qaytaramiz
+          return res.status(200).json({
+            ok: false, debug: true, note: 'HTML topildi, lekin kurslar aniqlanmadi',
+            status, contentType: ctype, textLength: text.length,
+            embeddedBlobCount,
+            rawSnippet: text.slice(0, 3000),
           });
         }
         if (found === 0) continue;
