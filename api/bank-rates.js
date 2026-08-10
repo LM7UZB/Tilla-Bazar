@@ -148,6 +148,33 @@ function dedupe(list, keep) {
   return [...map.values()];
 }
 
+// O'zbekiston Markaziy Banki rasmiy kursi (bank.uz ishlamay qolsa, zaxira sifatida).
+// Bu API doimiy va barqaror ishlaydi, hech qanday to'siq yo'q.
+async function fetchCbuRate() {
+  const urls = [
+    'https://cbu.uz/uz/arkhiv-kursov-valyut/json/',
+    'https://cbu.uz/en/arkhiv-kursov-valyut/json/',
+    'https://cbu.uz/oz/arkhiv-kursov-valyut/json/',
+  ];
+  for (const url of urls) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 6000);
+    try {
+      const r = await fetch(url, { headers: BROWSER_HEADERS, signal: ctrl.signal });
+      if (!r.ok) continue;
+      const data = await r.json();
+      const list = Array.isArray(data) ? data : [data];
+      const usd = list.find((x) => String(x?.Ccy || x?.ccy || '').toUpperCase() === 'USD');
+      if (usd) {
+        const rate = toNumber(usd.Rate ?? usd.rate);
+        if (isUsdRate(rate)) return { rate, date: usd.Date || usd.date || null };
+      }
+    } catch { /* keyingi manzilga o'tamiz */ }
+    finally { clearTimeout(timer); }
+  }
+  return null;
+}
+
 async function tryFetch(url) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 8000);
@@ -327,8 +354,28 @@ export default async function handler(req, res) {
     }
   }
 
+  // --- bank.uz/proksilar ishlamadi -> O'zbekiston Markaziy Banki rasmiy kursiga murojaat qilamiz ---
+  const cbu = await fetchCbuRate();
+  if (cbu) {
+    const label = "Markaziy Bank (rasmiy)";
+    if (debug) {
+      return res.status(200).json({
+        ok: true, debug: true, source: 'cbu', cbuRate: cbu.rate, cbuDate: cbu.date, attempts,
+      });
+    }
+    res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
+    return res.status(200).json({
+      ok: true, ccy: 'USD', source: 'cbu',
+      updatedAt: new Date().toISOString(),
+      cbuDate: cbu.date,
+      bestBuy: [{ bank: label, rate: cbu.rate }],
+      bestSell: [{ bank: label, rate: cbu.rate }],
+      note: "bank.uz dan jonli ma'lumot olinmadi; O'zbekiston Markaziy Banki rasmiy kursi ko'rsatilmoqda",
+    });
+  }
+
   if (debug) {
-    return res.status(200).json({ ok: false, debug: true, note: 'bank.uz/proksilar ishlamadi', attempts });
+    return res.status(200).json({ ok: false, debug: true, note: 'bank.uz/proksilar/CBU ishlamadi', attempts });
   }
 
   // Hammasi ishlamadi — zaxira (taxminiy) kurslar.
@@ -338,6 +385,6 @@ export default async function handler(req, res) {
     updatedAt: new Date().toISOString(),
     bestBuy: STATIC_FALLBACK.bestBuy,
     bestSell: STATIC_FALLBACK.bestSell,
-    note: 'bank.uz dan jonli ma\'lumot olinmadi; taxminiy kurslar',
+    note: 'bank.uz va CBU dan jonli ma\'lumot olinmadi; taxminiy kurslar',
   });
 }
