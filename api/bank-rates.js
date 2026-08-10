@@ -174,14 +174,14 @@ function parseAny(text, ctype) {
 // To'g'ri ko'rinadigan zaxira (jonli ma'lumot olinmasa).
 const STATIC_FALLBACK = {
   bestBuy: [
-    { bank: 'Hamkorbank', rate: 12720 },
-    { bank: 'Kapitalbank', rate: 12710 },
-    { bank: "Ipak Yo'li Bank", rate: 12700 },
+    { bank: 'Infinbank', rate: 11955 },
+    { bank: 'MKBank', rate: 11950 },
+    { bank: 'Universal bank', rate: 11950 },
   ],
   bestSell: [
-    { bank: 'TBC Bank', rate: 12650 },
-    { bank: 'Anorbank', rate: 12660 },
-    { bank: 'Kapitalbank', rate: 12675 },
+    { bank: "Xalq Banki", rate: 11980 },
+    { bank: 'Openbank', rate: 11995 },
+    { bank: 'Hayot Bank', rate: 12000 },
   ],
 };
 
