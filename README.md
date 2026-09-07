@@ -1,120 +1,83 @@
-# 💎 TillaBazar — birlashtirilgan yakuniy versiya
+# 💎 TillaBazar
 
-Bu versiya ikkita zip faylning eng yaxshi tomonlarini birlashtiradi:
+Tilla va kumush buyumlar onlayn bozori — Telegram Mini App + mustaqil veb-sayt.
 
-- 🎨 **Dizayn va UI** — oxirgi "Glass Edition" versiyasidan (chiroyli glassmorphism interfeys, yagona Admin panel)
-- ⚙️ **Ishlaydigan backend** — birinchi versiyadan (umumiy ma'lumotlar bazasi + Telegram xabarnomalari)
+## 🏗 Hozirgi arxitektura
 
-## ✅ Nima tuzatildi / qo'shildi
+| Qism | Qayerda | Nima qiladi |
+|---|---|---|
+| **Frontend** (sayt) | **Vercel** (`tillabazar.uz`) | React + Vite bilan yozilgan interfeys |
+| **Backend** (API) | **Render** (`tillabazar.onrender.com`) | Express server: `/api/state`, `/api/notify`, `/api/bank-rates` + Telegram bot (long polling) |
+| **Ma'lumotlar bazasi** | **Upstash Redis** | Mahsulotlar, sotuvchilar, arizalar, savdo tarixi — hammaga umumiy |
+| **Rasm/video saqlash** | **Cloudinary** | Yuklangan rasmlar (bepul, doimiy, hech qachon o'chmaydi) |
+| **Dollar kursi** | bank.uz → CBU (rasmiy) → taxminiy | 3 bosqichli zaxira tizimi (`api/bank-rates.js`) |
 
-1. **Kritik xato tuzatildi**: `SellModal.tsx`da mahsulot qo'shish funksiyasi (`onAddPendingProduct`) komponentga ulanmagan edi — sotuvchi "Sotish" tugmasini bossa, hech narsa saqlanmas edi. Endi ishlaydi.
-2. **Umumiy ma'lumotlar bazasi qo'shildi** (`api/state.js` + `utils/state.ts`): mahsulotlar, sotuvchilar, arizalar, savdo tarixi endi serverda saqlanadi — **barcha mijozlar bir xil ma'lumotni ko'radi**, oldingi versiyada esa har bir brauzerda alohida edi.
-3. **Telegram xabarnomalari qaytarildi** (`api/notify.js`): endi quyidagi hollarda sizga (adminga) Telegram orqali xabar keladi:
-   - Yangi mahsulot sotishga qo'yilganda
-   - Yangi buyurtma (naqd yoki muddatli) qilinganda
-   - Yangi sotuvchi arizasi kelganda
-4. Telegram Mini App sifatida ochilish qobiliyati saqlab qolindi (`index.tsx`, `index.html`), lekin sayt **mustaqil domenda ham to'liq ishlaydi**.
+Frontend barcha `/api/...` so'rovlarini to'g'ridan-to'g'ri Render manziliga yuboradi (`constants.ts` dagi `API_BASE`). Bu ikkalasini alohida (frontend — Vercel, backend — Render) joylashtirish imkonini beradi.
 
-## ⚠️ Bilib qo'yish kerak bo'lgan narsa
+## ✅ Asosiy imkoniyatlar
 
-- `GEMINI_API_KEY` (AI yordamchisi uchun) hozircha build vaqtida frontendga "yopishtiriladi" — ya'ni texnik jihatdan har kim ko'rishi mumkin. Kalitsiz ham sayt to'liq ishlayveradi. Agar buni real (pullik) kalit bilan xavfsiz qilish kerak bo'lsa, alohida ayting — server orqali "proksi" qilib beraman.
-- `/api/state` yozish huquqi hozircha ochiq (har qanday kishi texnik jihatdan so'rov yubora oladi). Kichik/shaxsiy do'kon uchun bu odatiy holat, lekin katta loyihaga aylansa, admin login/parol bilan himoyalashni tavsiya qilaman.
+- 🛍 Mahsulotlar katalogi (tilla/kumush), savat, checkout (naqd/muddatli)
+- 🏪 **Sotuvchi paneli** — har bir do'kon egasi o'z mahsulotlarini ko'radi, tahrirlaydi, sotilganlarini kuzatadi
+- 🛠 **Admin paneli** — tasdiqlash, sotuvchilar, mahsulotlar, reklamalar, bank/metal kurslari (faqat shu yerda tahrirlanadi)
+- 📩 Har bir muhim voqeada (yangi mahsulot, buyurtma, tahrirlash, ariza) — Telegram orqali adminga xabar
+- 🖼 Rasm/reklama galereyadan to'g'ridan-to'g'ri yuklanadi (Cloudinary)
+- 💵 Bank USD kurslari va tilla/kumush narxlari avtomatik (yoki admin tomonidan majburiy)
+- 👆 Reklama banneri qo'l bilan (swipe) suriladigan
 
----
+## 🔑 Environment Variables
 
-## 🚀 Ishga tushirish — 4 qadam (serversiz, bepul)
+### Render (backend) — barchasi kerak
+| Nomi | Izoh |
+|---|---|
+| `BOT_TOKEN` | BotFather tokeni — bot va xabarnomalar uchun |
+| `ADMIN_CHAT_ID` | Arizalar/buyurtmalar keladigan chat ID |
+| `WEBAPP_URL` | Botning "Do'konni ochish" tugmasi uchun (masalan `https://tillabazar.uz`) |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Upstash Redis — umumiy ma'lumotlar bazasi |
 
-> Bu bo'lim **Vercel** uchun. Agar **Render.com**'ga o'tmoqchi bo'lsangiz (masalan Vercel joyi/limiti tugab qolgan bo'lsa), pastdagi **"🖥️ Render.com'ga o'tish"** bo'limiga o'ting.
+### Vercel (frontend) — ixtiyoriy
+| Nomi | Izoh |
+|---|---|
+| `VITE_API_BASE_URL` | Agar Render manzili o'zgarsa, shu yerda yangilanadi. Berilmasa, `constants.ts` dagi standart qiymat (`https://tillabazar.onrender.com`) ishlatiladi |
+| `GEMINI_API_KEY` | AI yordamchisi uchun (ixtiyoriy, kalitsiz ham sayt ishlayveradi) |
 
+Cloudinary sozlamalari (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_UPLOAD_PRESET`) hozircha `constants.ts` faylida to'g'ridan-to'g'ri yozilgan (ular maxfiy emas — "unsigned" ochiq kalitlar, shuning uchun kodda turishi xavfsiz).
 
-### 1-qadam — Bot tokeningiz
-[@BotFather](https://t.me/BotFather) orqali olingan token: `123456789:AAE...`
+## 🚀 Deploy qilish
 
-### 2-qadam — Admin Chat ID
-[@userinfobot](https://t.me/userinfobot) ga `/start` yuboring → Chat ID raqamingizni oladi.
+### Backend (Render)
+1. [render.com](https://render.com) → **New + → Blueprint** → shu repo'ni tanlang (`render.yaml` avtomatik topiladi)
+2. Environment Variables'ni to'ldiring (yuqoridagi jadval)
+3. Deploy — Render `npm install && npm run build` qilib, `npm start` bilan ishga tushiradi
 
-### 3-qadam — Vercel'ga deploy
-1. Bu loyihani GitHub akkauntingizga yuklang.
-2. [vercel.com](https://vercel.com) → **Add New → Project** → repo'ni import qiling.
-3. Framework: **Vite** (avtomatik aniqlanadi). Root Directory: loyihaning o'zi (agar repo faqat shu loyihadan iborat bo'lsa, o'zgartirish shart emas).
-4. **Environment Variables**:
-   | Nomi | Majburiy | Izoh |
-   |------|:---:|------|
-   | `BOT_TOKEN` | ✅ | BotFather token — xabarnomalar uchun |
-   | `ADMIN_CHAT_ID` | ➖ | Arizalar keladigan chat ID |
-   | `GEMINI_API_KEY` | ➖ | AI yordamchisi uchun (ixtiyoriy) |
-5. **Storage → Create Database → KV** ni loyihaga ulang — bu **umumiy ma'lumotlar bazasi** uchun kerak (ulamasangiz ham sayt ishlaydi, lekin ma'lumotlar faqat brauzerda qoladi).
-6. **Deploy** tugmasini bosing. Manzil beriladi, masalan: `https://tillabazar.vercel.app`
-
-### 4-qadam — Domeningizni ulash
-Vercel loyihasi → **Settings → Domains** → domeningizni kiriting → ko'rsatilgan DNS yozuvlarini (A/CNAME) domen provayderingizda (masalan Cloudflare, Reg.ru, Uzinfocom) sozlang.
-
-### (Ixtiyoriy) Telegram bot tugmasi
-Agar Telegram ichida ham ochilishini xohlasangiz: [@BotFather](https://t.me/BotFather) → `/mybots` → botingiz → **Bot Settings → Menu Button** → URL sifatida domeningizni kiriting.
-
----
-
-## 📁 Tuzilish
-
-```
-.
-├── App.tsx                 # Asosiy ilova (holatni serverga sinxronlaydi)
-├── components/              # UI komponentlari (glass dizayn)
-├── api/
-│   ├── _kv.js               # Vercel KV (Upstash Redis) bilan ishlash
-│   ├── _auth.js              # Telegram initData tekshiruvi (kelajakda kengaytirish uchun)
-│   ├── notify.js             # Adminga Telegram xabar yuborish
-│   └── state.js              # Umumiy do'kon holati (mahsulot/sotuvchi/buyurtma)
-├── utils/
-│   ├── telegram.ts           # notifyAdmin(), customerInfoText()
-│   └── state.ts               # fetchSharedState(), saveSharedState()
-├── services/geminiService.ts # AI yordamchisi (ixtiyoriy)
-├── vercel.json
-└── .env.example
-```
+### Frontend (Vercel)
+1. [vercel.com/new](https://vercel.com/new) → shu repo'ni import qiling
+2. Framework: **Vite** (avtomatik aniqlanadi)
+3. Deploy — `.vercelignore` tufayli faqat frontend joylanadi, backend fayllari (`api/`, `server.js`) e'tiborga olinmaydi
+4. **Settings → Domains** → o'z domeningizni ulang
 
 ## 🛠 Lokal test
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000
+npm run dev        # frontend: http://localhost:5173 (Vite)
+npm run build       # production build -> dist/
+npm start            # backend (Express + bot): http://localhost:3000
 ```
 
-## 🏗 Build
+## 📁 Muhim fayllar
 
-```bash
-npm run build     # natija: dist/
 ```
-
----
-
-## 🖥️ Render.com'ga o'tish (Vercel o'rniga)
-
-Vercel'da joy/limit tugab qolsa, butun loyihani **Render.com**'ga (bepul reja bor) ko'chirish mumkin. Bu loyihada Render uchun kerakli hamma narsa (`server.js`, `render.yaml`) allaqachon tayyor.
-
-**Farqi:** Vercel'da har bir `api/*.js` fayli alohida "serverless funksiya" sifatida ishlaydi. Render'da esa ular bitta doimiy ishlaydigan `server.js` (Express) orqali xizmat qiladi — bir xil kod, faqat ishga tushirish usuli boshqacha. Bonus: shu bitta server ichida **Telegram bot** ham (agar xohlasangiz) uzluksiz ishlab turadi.
-
-### Qadamlar
-
-1. **Ma'lumotlar bazasini saqlab qolish** (muhim!): agar Vercel'da "Storage → KV" ulagan bo'lsangiz, o'sha joydan `KV_REST_API_URL` va `KV_REST_API_TOKEN` qiymatlarini nusxalab oling (Vercel loyihasi → Storage → tegishli baza → ".env.local" yoki "Quickstart" bo'limida ko'rinadi). Bu Upstash Redis — Render'da ham xuddi shu qiymatlar bilan ishlatiladi, ma'lumot yo'qolmaydi.
-
-2. [render.com](https://render.com) da ro'yxatdan o'ting/kiring → **"New +" → "Blueprint"**
-
-3. Shu GitHub repongizni tanlang — Render `render.yaml` faylini avtomatik topib, xizmatni sozlab beradi
-
-4. **Environment Variables** bo'limida to'ldiring:
-   | Nomi | Qiymat |
-   |------|--------|
-   | `BOT_TOKEN` | BotFather tokeningiz |
-   | `ADMIN_CHAT_ID` | Chat ID raqamingiz |
-   | `WEBAPP_URL` | Render sizga beradigan manzil (masalan `https://tillabazar.onrender.com`) — birinchi deploydan keyin bilib, qayta kiritib qo'ysangiz ham bo'ladi |
-   | `KV_REST_API_URL` | Vercel'dan nusxalangan qiymat (1-qadam) |
-   | `KV_REST_API_TOKEN` | Vercel'dan nusxalangan qiymat (1-qadam) |
-
-5. **"Apply"** / **"Deploy"** tugmasini bosing — Render avtomatik `npm install && npm run build` qilib, keyin `npm start` bilan ishga tushiradi
-
-6. Deploy tugagach, sizga berilgan manzilni (`https://xxxxx.onrender.com`) domeningizga (`tillabazar.uz`) ulang — bu qadam Vercel'dagi bilan bir xil: Render loyihasi → **Settings → Custom Domain** → domeningizni kiriting → ko'rsatilgan DNS yozuvini domen provayderingizda (Ahost.uz) sozlang
-
-7. **Eslatma:** Render'ning bepul rejasida xizmat 15 daqiqa faoliyatsiz qolsa "uxlab qoladi" va keyingi so'rovda ~30-50 soniya sekinroq ochiladi. Agar bu muammo bo'lsa, Render'ning pullik ("Starter", ~$7/oy) rejasiga o'tish tavsiya etiladi — u doim "uyg'oq" turadi.
-
-Ikkalasini (Vercel va Render) parallel ham ochiq qoldirishingiz mumkin — kodga hech narsa o'zgartirish shart emas, faqat qaysi birini domeningizga ulashni tanlaysiz.
+.
+├── App.tsx                  # Asosiy ilova
+├── components/               # UI (SellModal, AdminPanelModal, SellerPanelModal va h.k.)
+├── api/
+│   ├── _kv.js                 # Upstash Redis bilan ishlash
+│   ├── notify.js               # Telegram xabarnomalari
+│   ├── state.js                 # Umumiy do'kon holati
+│   └── bank-rates.js             # bank.uz -> CBU -> zaxira (3 bosqichli)
+├── server.js                 # Render uchun Express server + Telegram bot
+├── render.yaml                # Render blueprint
+├── vercel.json                 # Vercel sozlamalari
+├── .vercelignore                # Vercel'ga backend fayllarini yuklamaslik
+└── constants.ts                  # API_BASE, Cloudinary, admin login va h.k.
+```

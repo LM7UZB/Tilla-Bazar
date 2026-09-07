@@ -1,0 +1,7 @@
+# Backend (API + Telegram bot) endi faqat Render'da ishlaydi.
+# Vercel endi FAQAT frontend (sayt)ni joylaydi — shuning uchun bu fayllarni
+# Vercel'ga yuklash shart emas (bekorga joy/build vaqtini yemasin, "serverless function"
+# sifatida ham hisoblanmasin).
+api/
+server.js
+render.yaml
