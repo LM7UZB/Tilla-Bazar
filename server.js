@@ -100,6 +100,17 @@ if (BOT_TOKEN) {
       else console.error('Botda kutilmagan xato:', e);
     });
 
+    // Muhim: agar bot avval "webhook" rejimida ishlatilgan bo'lsa (masalan boshqa loyihada),
+    // o'sha eski ulanish hozirgi "doimiy tinglash" (long polling) rejimi bilan to'qnashadi
+    // va bot /start'ga umuman javob bermay qoladi. Shuning uchun ishga tushishdan oldin
+    // eski webhook'ni avtomatik o'chirib tashlaymiz.
+    try {
+      await bot.api.deleteWebhook({ drop_pending_updates: false });
+      console.log('✅ Eski webhook (agar bo\'lsa) tozalandi');
+    } catch (e) {
+      console.warn('⚠️  Webhook tozalashda ogohlantirish:', e?.message || e);
+    }
+
     bot.start();
     console.log('🤖 Telegram bot ishga tushdi (long polling)');
   } catch (e) {
